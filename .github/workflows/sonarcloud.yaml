@@ -1,0 +1,53 @@
+# This workflow will build a golang project
+name: SonarCloud Manual Trigger
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  code-check:
+    name: Build and check code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '^1.21.4'
+      - name: Create Reports
+        run: |
+          ./project test
+          ./project coverage
+
+      - name: Set version env
+        run: echo "CUR_PROJECT_VERSION=$(./project bump -c -s)" >> "$GITHUB_ENV"
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=mortedecai_go-burn-bits
+            -Dsonar.organization=mortedecai
+            -Dsonar.projectVersion=${{ env.CUR_PROJECT_VERSION }}
+            -Dsonar.sourceEncoding=UTF-8
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/*_test.go,**/vendor/**,**/testing/integration/**/*.go
+            -Dsonar.tests=.
+            -Dsonar.test.exclusions=**/vendor/**
+            -Dsonar.test.inclusions=**/*_test.go
+            -Dsonar.go.coverage.reportPaths=.reports/coverage.out
+            -Dsonar.go.tests.reportPaths=.reports/unit_test.json
+
+      - name: Archive Code Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: project-reports
+          path: .reports/
+
+
+

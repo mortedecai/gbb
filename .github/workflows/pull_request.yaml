@@ -1,0 +1,115 @@
+# This workflow will build a golang project
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  go-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Test
+      run: ./project test
+
+    - name: Coverage
+      run: ./project coverage
+
+    - name: Gather
+      uses: actions/upload-artifact@v3
+      with:
+        name: reports
+        path: ./.reports/*
+
+  go-lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21.4'
+
+    - name: Configure git for private modules
+      run: git config --global url."https://mortedecai:${TOKEN}@github.com".insteadOf "https://github.com"
+
+    - name: Generate Mocks
+      run: |
+        go install go.uber.org/mock/mockgen@latest
+        ./project generate -v
+
+    - name: Lint Go
+      uses: dominikh/staticcheck-action@v1.3.0
+      with:
+        install-go: false
+
+    - name: Run Gosec Security Scanner
+      uses: securego/gosec@master
+      with:
+        # we let the report trigger content trigger a failure using the GitHub Security features.
+        args: './...'
+ 
+    - name: Vet Go
+      run: go vet ./...
+      
+  go-build:
+    runs-on: ubuntu-latest
+    needs: [go-test, go-lint]
+    steps:
+    - uses: actions/checkout@v3
+ 
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Build
+      run: go build -v ./...
+
+  code-check:
+    name: Build and check code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '^1.19'
+      - name: Set version env
+        run: echo "CUR_PROJECT_VERSION=$(./project bump -c -s)" >> "$GITHUB_ENV"
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=mortedecai_go-burn-bits
+            -Dsonar.organization=mortedecai
+            -Dsonar.projectVersion=${{ env.CUR_PROJECT_VERSION }}
+            -Dsonar.sourceEncoding=UTF-8
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/*_test.go,**/vendor/**,**/testing/integration/**/*.go
+            -Dsonar.tests=.
+            -Dsonar.test.exclusions=**/vendor/**
+            -Dsonar.test.inclusions=**/*_test.go
+            -Dsonar.go.coverage.reportPaths=.reports/coverage.out
+            -Dsonar.go.tests.reportPaths=.reports/unit_test.json
+
+      - name: Archive Code Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: project-reports
+          path: .reports/
+
+

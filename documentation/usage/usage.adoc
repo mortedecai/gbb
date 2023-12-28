@@ -1,0 +1,3 @@
+# Go Burn Bits Usage Documentation
+Mortedecai (github.com/mortedecai)
+

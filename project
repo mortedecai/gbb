@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+PROJECT_ROOT=`git rev-parse --show-toplevel`
+
+usage() {
+  echo -e "project usage:  ./project <command> [<options>]"
+  echo -e "  Where: <command> is one of:"
+  echo -e "    - build - Build the source code"
+  echo -e "    - bump - Bump the version"
+  echo -e "    - test - Test and generate output report(s)"
+  echo -e "    - coverage - Generate coverage output files (.out and .html)"
+  echo -e ""
+  echo -e "    - clean - Remove temporary files"
+}
+
+if [ $# -lt 1 ];
+then
+  usage
+  exit 1
+fi
+
+CMD=$1
+shift
+
+run_build() {
+    mkdir -p bin/iOS/
+    go build -o bin/iOS/gbb ./cmd/gbb/gbb.go
+}
+
+run_bump() {
+    ${PROJECT_ROOT}/scripts/bump.sh $*
+}
+
+run_clean() {
+    rm -fr .reports/
+    rm -fr bin/
+}
+
+check_and_install_ginkgo() {
+    type ginkgo
+    if [ $? -ne 0 ]; then
+        go install github.com/onsi/ginkgo/v2/ginkgo
+    fi
+}
+
+run_test() {
+    mkdir -p .reports/
+    check_and_install_ginkgo
+    ginkgo --repeat 1 -r --output-dir .reports --json-report unit_tests.json --vv ./... > .reports/unit_tests.log 
+    tail .reports/unit_tests.log
+}
+
+run_coverage() {
+    mkdir -p ${PROJECT_ROOT}/.reports/
+    go test --test.coverprofile .reports/coverage.out ./...
+    go tool cover -html=.reports/coverage.out -o .reports/coverage.html
+}
+
+type run_${CMD} > /dev/null
+CMD_FOUND=$?
+
+if [ ${CMD_FOUND} -ne 0 ];
+then
+  echo -e "Unknown command: ${CMD}"
+  echo -e ""
+  usage
+  exit 2
+fi
+
+run_${CMD} $*
+
+
