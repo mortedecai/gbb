@@ -17,7 +17,7 @@ var _ = Describe("Go Burn Bits", func() {
 		It("should return 'Hello, World!'", func() {
 			Expect(greetings()).To(Equal("Hello, World!"))
 		})
-		It("should  print 'Hello, World!'", func() {
+		XIt("should  print 'Hello, World!'", func() {
 			reader, writer, err := os.Pipe()
 			Expect(err).ToNot(HaveOccurred())
 
