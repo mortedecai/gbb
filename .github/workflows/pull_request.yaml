@@ -92,10 +92,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT: ${{ secrets.SONAR_PROJECT }}
+          SONAR_ORG: ${{ secrets.SONAR_ORG }}
         with:
           args: >
-            -Dsonar.projectKey=mortedecai_go-burn-bits
-            -Dsonar.organization=mortedecai
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT }}
+            -Dsonar.organization=${{ env.SONAR_ORG }}
             -Dsonar.projectVersion=${{ env.CUR_PROJECT_VERSION }}
             -Dsonar.sourceEncoding=UTF-8
             -Dsonar.sources=.
