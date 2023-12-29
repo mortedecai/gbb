@@ -132,8 +132,12 @@ fi
 if [[ ${DRY_RUN} -eq 0 ]]; then
 #    git tag -a ${BUMPED_VERSION}
 #    git push --tags
+echo "HI"
 else
-    echo "git tag -a ${BUMPED_VERSION}"
-    echo "git push --tags"
+    echo "${BUMPED_VERSION}"
+    if [ ${PROJECT_SILENT} -ne 1 ]; then
+        echo "git tag -a ${BUMPED_VERSION}"
+        echo "git push --tags"
+    fi
 fi
 

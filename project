@@ -24,7 +24,8 @@ shift
 
 run_build() {
     mkdir -p bin/iOS/
-    go build -o bin/iOS/gbb ./cmd/gbb/gbb.go
+    CUR_VERSION=$(./project bump -r ${PROJECT_ROOT} -d -v alpha -s)
+    go build -ldflags="-X 'main.version=${CUR_VERSION}'" -o bin/iOS/gbb ./cmd/gbb/gbb.go
 }
 
 run_bump() {
@@ -34,6 +35,10 @@ run_bump() {
 run_clean() {
     rm -fr .reports/
     rm -fr bin/
+}
+
+run_generate() {
+  go generate ./...
 }
 
 check_and_install_ginkgo() {
@@ -47,13 +52,21 @@ run_test() {
     mkdir -p .reports/
     check_and_install_ginkgo
     ginkgo --repeat 1 -r --output-dir .reports --json-report unit_tests.json --vv ./... > .reports/unit_tests.log 
+    local RESULT=$?
     tail .reports/unit_tests.log
+    if [ ${RESULT} -ne 0 ]; then
+        exit ${RESULT}
+    fi
 }
 
 run_coverage() {
     mkdir -p ${PROJECT_ROOT}/.reports/
     go test --test.coverprofile .reports/coverage.out ./...
+    local RESULT=$?
     go tool cover -html=.reports/coverage.out -o .reports/coverage.html
+    if [ ${RESULT} -ne 0 ]; then
+        exit ${RESULT}
+    fi
 }
 
 type run_${CMD} > /dev/null
