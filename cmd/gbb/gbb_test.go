@@ -17,7 +17,7 @@ var _ = Describe("Go Burn Bits", func() {
 		It("should return 'Hello, World!'", func() {
 			Expect(greetings()).To(Equal("Hello, World!"))
 		})
-		XIt("should  print 'Hello, World!'", func() {
+		It("should  print 'Hello, World!'", func() {
 			reader, writer, err := os.Pipe()
 			Expect(err).ToNot(HaveOccurred())
 
@@ -35,6 +35,7 @@ var _ = Describe("Go Burn Bits", func() {
 
 			wg := new(sync.WaitGroup)
 			wg.Add(1)
+			version = "v0.0.0-test"
 			main()
 
 			go func() {
@@ -50,7 +51,7 @@ var _ = Describe("Go Burn Bits", func() {
 
 			str := strings.TrimSpace(<-out)
 
-			Expect(str).To(Equal("Hello, World!"))
+			Expect(str).To(Equal("Hello, World! [v0.0.0-test]"))
 		})
 	})
 })
