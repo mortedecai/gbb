@@ -37,6 +37,10 @@ run_clean() {
     rm -fr bin/
 }
 
+run_generate() {
+  go generate ./...
+}
+
 check_and_install_ginkgo() {
     type ginkgo
     if [ $? -ne 0 ]; then
