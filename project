@@ -24,7 +24,8 @@ shift
 
 run_build() {
     mkdir -p bin/iOS/
-    go build -o bin/iOS/gbb ./cmd/gbb/gbb.go
+    CUR_VERSION=$(./project bump -r ${PROJECT_ROOT} -d -v alpha -s)
+    go build -ldflags="-X 'main.version=${CUR_VERSION}'" -o bin/iOS/gbb ./cmd/gbb/gbb.go
 }
 
 run_bump() {
