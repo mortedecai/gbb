@@ -23,6 +23,10 @@ go.work
 # VIM files
 *.swp
 
+# IntelliJ
+.idea/workspace.xml
+.idea/libraries
+
 # Project Files
 .reports/
 bin/
