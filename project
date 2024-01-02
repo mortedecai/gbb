@@ -53,7 +53,7 @@ run_test() {
     check_and_install_ginkgo
     ginkgo --repeat 1 -r --output-dir .reports --json-report unit_tests.json --vv ./... > .reports/unit_tests.log 
     local RESULT=$?
-    tail .reports/unit_tests.log
+    cat .reports/unit_tests.log
     if [ ${RESULT} -ne 0 ]; then
         exit ${RESULT}
     fi
