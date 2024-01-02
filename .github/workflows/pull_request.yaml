@@ -24,9 +24,9 @@ jobs:
       run: ./project coverage
 
     - name: Gather
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: reports
+        name: test-reports
         path: ./.reports/*
 
   go-lint:
@@ -63,7 +63,7 @@ jobs:
       
   go-build:
     runs-on: ubuntu-latest
-    needs: [go-test, go-lint]
+    needs: [go-test, go-lint, go-sonar]
     steps:
     - uses: actions/checkout@v3
  
@@ -75,8 +75,9 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-  code-check:
+  go-sonar:
     name: Build and check code
+    needs: [go-test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -85,8 +86,16 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: '^1.19'
+
+      - name: Retrieve Code Reports
+        uses: actions/download-artifact@v4
+        with:
+          name: test-reports
+          path: .reports/
+
+
       - name: Set version env
-        run: echo "CUR_PROJECT_VERSION=$(./project bump -c -s)" >> "$GITHUB_ENV"
+        run: echo "CUR_PROJECT_VERSION=$(./project bump -r $PWD -d -v alpha -s)" >> "$GITHUB_ENV"
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
@@ -96,8 +105,8 @@ jobs:
           SONAR_ORG: ${{ secrets.SONAR_ORG }}
         with:
           args: >
-            -Dsonar.projectKey=${{ env.SONAR_PROJECT }}
-            -Dsonar.organization=${{ env.SONAR_ORG }}
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT }}
+            -Dsonar.organization=${{ vars.SONAR_ORG }}
             -Dsonar.projectVersion=${{ env.CUR_PROJECT_VERSION }}
             -Dsonar.sourceEncoding=UTF-8
             -Dsonar.sources=.
@@ -107,11 +116,3 @@ jobs:
             -Dsonar.test.inclusions=**/*_test.go
             -Dsonar.go.coverage.reportPaths=.reports/coverage.out
             -Dsonar.go.tests.reportPaths=.reports/unit_test.json
-
-      - name: Archive Code Reports
-        uses: actions/upload-artifact@v3
-        with:
-          name: project-reports
-          path: .reports/
-
-

@@ -24,8 +24,7 @@ go.work
 *.swp
 
 # IntelliJ
-.idea/workspace.xml
-.idea/libraries
+.idea/
 
 # Project Files
 .reports/
