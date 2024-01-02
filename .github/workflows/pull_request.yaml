@@ -86,7 +86,7 @@ jobs:
         with:
           go-version: '^1.19'
       - name: Set version env
-        run: echo "CUR_PROJECT_VERSION=$(./project bump -c -s)" >> "$GITHUB_ENV"
+        run: echo "CUR_PROJECT_VERSION=$(./project bump -r $PWD -d -v alpha -s)" >> "$GITHUB_ENV"
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
@@ -96,8 +96,8 @@ jobs:
           SONAR_ORG: ${{ secrets.SONAR_ORG }}
         with:
           args: >
-            -Dsonar.projectKey=${{ env.SONAR_PROJECT }}
-            -Dsonar.organization=${{ env.SONAR_ORG }}
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT }}
+            -Dsonar.organization=${{ vars.SONAR_ORG }}
             -Dsonar.projectVersion=${{ env.CUR_PROJECT_VERSION }}
             -Dsonar.sourceEncoding=UTF-8
             -Dsonar.sources=.
