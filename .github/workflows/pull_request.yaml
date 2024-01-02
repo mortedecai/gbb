@@ -63,7 +63,7 @@ jobs:
       
   go-build:
     runs-on: ubuntu-latest
-    needs: [go-test, go-lint]
+    needs: [go-test, go-lint, sonar-scan]
     steps:
     - uses: actions/checkout@v3
  
@@ -75,7 +75,7 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-  code-check:
+  sonar-scan:
     needs: [go-test]
     name: Build and check code
     runs-on: ubuntu-latest
