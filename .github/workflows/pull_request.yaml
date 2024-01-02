@@ -24,9 +24,9 @@ jobs:
       run: ./project coverage
 
     - name: Gather
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: reports
+        name: test-reports
         path: ./.reports/*
 
   go-lint:
@@ -76,6 +76,7 @@ jobs:
       run: go build -v ./...
 
   code-check:
+    needs: [go-test]
     name: Build and check code
     runs-on: ubuntu-latest
     steps:
@@ -87,6 +88,12 @@ jobs:
           go-version: '^1.19'
       - name: Set version env
         run: echo "CUR_PROJECT_VERSION=$(./project bump -r $PWD -d -v alpha -s)" >> "$GITHUB_ENV"
+      - name: Fetch Code Reports
+        uses: actions/download-artifact@v4
+        with:
+          name: test-reports
+          path: .reports/
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
@@ -107,11 +114,5 @@ jobs:
             -Dsonar.test.inclusions=**/*_test.go
             -Dsonar.go.coverage.reportPaths=.reports/coverage.out
             -Dsonar.go.tests.reportPaths=.reports/unit_test.json
-
-      - name: Archive Code Reports
-        uses: actions/upload-artifact@v3
-        with:
-          name: project-reports
-          path: .reports/
 
 
