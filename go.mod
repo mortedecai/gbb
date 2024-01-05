@@ -1,6 +1,6 @@
 module github.com/mortedecai/go-burn-bits
 
-go 1.21.3
+go 1.21
 
 require (
 	github.com/onsi/ginkgo/v2 v2.13.2
