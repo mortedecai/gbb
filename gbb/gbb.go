@@ -26,9 +26,10 @@ type GBBClient interface {
 //go:generate mockgen -destination=./mocks/mock_client.go -package=mocks github.com/mortedecai/go-burn-bits/gbb GBBClient
 
 type GBB struct {
-	Host      string
-	AuthToken string
-	Client    GBBClient
+	Host       string
+	AuthToken  string
+	Client     GBBClient
+	WorkingDir string
 }
 
 const (
@@ -37,7 +38,9 @@ const (
 
 // New creates a GoBurnBits instance
 func New(host string, token string) *GBB {
-	return &GBB{Host: host, AuthToken: token, Client: http.DefaultClient}
+	wd, _ := os.Getwd()
+
+	return &GBB{Host: host, AuthToken: token, Client: http.DefaultClient, WorkingDir: wd}
 }
 
 // Run starts the process of running the command line input
@@ -65,7 +68,7 @@ func (g *GBB) handleServerCall(req *http.Request, expStatus int, responseData an
 
 	resp, err := g.Client.Do(req)
 	if err != nil {
-		return fmt.Errorf("%w: %s", gbberror.RequestFailed, err)
+		return fmt.Errorf(gbberror.StandardWrapper, gbberror.RequestFailed, err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != expStatus {
@@ -73,11 +76,11 @@ func (g *GBB) handleServerCall(req *http.Request, expStatus int, responseData an
 	}
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("%w: %s", gbberror.ResponseReadFailed, err.Error())
+		return fmt.Errorf(gbberror.StandardWrapper, gbberror.ResponseReadFailed, err.Error())
 	}
 	err = json.Unmarshal(data, &responseData)
 	if err != nil {
-		return fmt.Errorf("%w: %s", gbberror.BadJSON, err.Error())
+		return fmt.Errorf(gbberror.StandardWrapper, gbberror.BadJSON, err.Error())
 	}
 
 	return nil
@@ -109,19 +112,15 @@ func (g *GBB) HandleDownload(args []string) error {
 	if len(outputDir) == 0 {
 		return gbberror.NoOutputDir
 	}
-	wd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("%w: working dir %s", gbberror.FileIssue, err.Error())
-	}
 
-	outputPath := path.Join(wd, outputDir)
-	if !strings.HasPrefix(outputPath, wd) {
+	outputPath := path.Join(g.WorkingDir, outputDir)
+	if !strings.HasPrefix(outputPath, g.WorkingDir) {
 		return fmt.Errorf("%w: %s is outside working directory", gbberror.BadOutputDir, outputPath)
 	}
 
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s", g.Host), bytes.NewBuffer([]byte("{}")))
 	if err != nil {
-		return fmt.Errorf("%w: %s", gbberror.RequestFailed, err)
+		return fmt.Errorf(gbberror.StandardWrapper, gbberror.RequestFailed, err)
 	}
 	var downloadResults GBBDownloadFilesResponse
 	if err = g.handleServerCall(req, http.StatusOK, &downloadResults); err != nil {
@@ -131,10 +130,14 @@ func (g *GBB) HandleDownload(args []string) error {
 		return fmt.Errorf("%w: results file has success == false", gbberror.BitBurnerFailure)
 	}
 
+	return g.WriteFiles(outputPath, downloadResults.Data.Files)
+}
+
+func (g *GBB) WriteFiles(outputDir string, files []GBBDownloadFile) error {
 	failedFiles := make([]string, 0)
 
-	for _, v := range downloadResults.Data.Files {
-		fp := path.Join(outputPath, v.Filename)
+	for _, v := range files {
+		fp := path.Join(outputDir, v.Filename)
 		f, err := os.Create(fp)
 		if err != nil {
 			failedFiles = append(failedFiles, fmt.Sprintf("%s (%s)", v.Filename, fp))

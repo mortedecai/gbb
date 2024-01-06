@@ -23,3 +23,7 @@ var (
 	// BitBurner Errors
 	BitBurnerFailure = errors.New("failed response from BitBurner")
 )
+
+const (
+	StandardWrapper = "%w: %s"
+)
