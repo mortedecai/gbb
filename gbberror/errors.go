@@ -4,24 +4,24 @@ import "errors"
 
 var (
 	// Development errors
-	NotYetImplemented = errors.New("not yet implemented")
+	ErrNotYetImplemented = errors.New("not yet implemented")
 
 	// Auth'n & Auth'z errors
-	NoAuthToken = errors.New("no auth token")
+	ErrNoAuthToken = errors.New("no auth token")
 
 	// File & Directory errors
-	NoOutputDir  = errors.New("no output direcotry supplied")
-	BadOutputDir = errors.New("bad output directory")
-	FileIssue    = errors.New("file error")
+	ErrNoOutputDir  = errors.New("no output direcotry supplied")
+	ErrBadOutputDir = errors.New("bad output directory")
+	ErrFileIssue    = errors.New("file error")
 
 	// HTTP Errors
-	UnexpectedResponse = errors.New("unexpected status code")
-	ResponseReadFailed = errors.New("response read failed")
-	BadJSON            = errors.New("bad JSON for marshal/unmarshal")
-	RequestFailed      = errors.New("issue creating request")
+	ErrUnexpectedResponse = errors.New("unexpected status code")
+	ErrResponseReadFailed = errors.New("response read failed")
+	ErrBadJSON            = errors.New("bad JSON for marshal/unmarshal")
+	ErrRequestFailed      = errors.New("issue creating request")
 
 	// BitBurner Errors
-	BitBurnerFailure = errors.New("failed response from BitBurner")
+	ErrBitBurnerFailure = errors.New("failed response from BitBurner")
 )
 
 const (

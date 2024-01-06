@@ -45,7 +45,7 @@ func New(host string, token string) *GBB {
 
 // Run starts the process of running the command line input
 func (g *GBB) Run(_ []string) error {
-	return gbberror.NotYetImplemented
+	return gbberror.ErrNotYetImplemented
 }
 
 type GBBDownloadFilesResponse struct {
@@ -68,19 +68,19 @@ func (g *GBB) handleServerCall(req *http.Request, expStatus int, responseData an
 
 	resp, err := g.Client.Do(req)
 	if err != nil {
-		return fmt.Errorf(gbberror.StandardWrapper, gbberror.RequestFailed, err)
+		return fmt.Errorf(gbberror.StandardWrapper, gbberror.ErrRequestFailed, err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != expStatus {
-		return fmt.Errorf("%w: expected %d, got %d", gbberror.UnexpectedResponse, http.StatusOK, resp.StatusCode)
+		return fmt.Errorf("%w: expected %d, got %d", gbberror.ErrUnexpectedResponse, http.StatusOK, resp.StatusCode)
 	}
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf(gbberror.StandardWrapper, gbberror.ResponseReadFailed, err.Error())
+		return fmt.Errorf(gbberror.StandardWrapper, gbberror.ErrResponseReadFailed, err.Error())
 	}
 	err = json.Unmarshal(data, &responseData)
 	if err != nil {
-		return fmt.Errorf(gbberror.StandardWrapper, gbberror.BadJSON, err.Error())
+		return fmt.Errorf(gbberror.StandardWrapper, gbberror.ErrBadJSON, err.Error())
 	}
 
 	return nil
@@ -107,27 +107,27 @@ func (g *GBB) HandleDownload(args []string) error {
 		}
 	}
 	if strings.TrimSpace(authToken) == "" {
-		return gbberror.NoAuthToken
+		return gbberror.ErrNoAuthToken
 	}
 	if len(outputDir) == 0 {
-		return gbberror.NoOutputDir
+		return gbberror.ErrNoOutputDir
 	}
 
 	outputPath := path.Join(g.WorkingDir, outputDir)
 	if !strings.HasPrefix(outputPath, g.WorkingDir) {
-		return fmt.Errorf("%w: %s is outside working directory", gbberror.BadOutputDir, outputPath)
+		return fmt.Errorf("%w: %s is outside working directory", gbberror.ErrBadOutputDir, outputPath)
 	}
 
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s", g.Host), bytes.NewBuffer([]byte("{}")))
 	if err != nil {
-		return fmt.Errorf(gbberror.StandardWrapper, gbberror.RequestFailed, err)
+		return fmt.Errorf(gbberror.StandardWrapper, gbberror.ErrRequestFailed, err)
 	}
 	var downloadResults GBBDownloadFilesResponse
 	if err = g.handleServerCall(req, http.StatusOK, &downloadResults); err != nil {
 		return err
 	}
 	if !downloadResults.Success {
-		return fmt.Errorf("%w: results file has success == false", gbberror.BitBurnerFailure)
+		return fmt.Errorf("%w: results file has success == false", gbberror.ErrBitBurnerFailure)
 	}
 
 	return g.WriteFiles(outputPath, downloadResults.Data.Files)
@@ -151,7 +151,7 @@ func (g *GBB) WriteFiles(outputDir string, files []GBBDownloadFile) error {
 		for i, v := range failedFiles {
 			fmt.Printf("%d) %s\n", (i + 1), v)
 		}
-		return fmt.Errorf("%w: failed to write files", gbberror.FileIssue)
+		return fmt.Errorf("%w: failed to write files", gbberror.ErrFileIssue)
 	}
 
 	return nil
@@ -163,7 +163,7 @@ func (g *GBB) writeFile(f *os.File, v GBBDownloadFile) error {
 	for attempts := 0; totalWritten < len(v.Code) && attempts < 10; attempts++ {
 		amtWritten, err := f.WriteString(v.Code)
 		if err != nil {
-			return fmt.Errorf("%w: unable to write to file %s: %s", gbberror.FileIssue, v.Filename, err.Error())
+			return fmt.Errorf("%w: unable to write to file %s: %s", gbberror.ErrFileIssue, v.Filename, err.Error())
 		}
 		totalWritten += amtWritten
 	}
