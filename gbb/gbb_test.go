@@ -38,8 +38,8 @@ var _ = Describe("Gbb", func() {
 		BeforeEach(func() {
 			instance = New(localhost, token)
 		})
-		It("should fail initially with not yet implemented", func() {
-			Expect(instance.Run([]string{""})).Should(MatchError(gbberror.ErrNotYetImplemented))
+		It("should fail with bad arguments if none given", func() {
+			Expect(instance.Run([]string{})).Should(MatchError(gbberror.ErrBadArguments))
 		})
 	})
 	Describe("Server Calls", func() {
@@ -91,7 +91,8 @@ var _ = Describe("Gbb", func() {
 			})
 		}
 	})
-	Describe("Download file", func() {
+
+	Describe("Run", func() {
 		var (
 			instance GoBurnBits
 		)
@@ -102,17 +103,32 @@ var _ = Describe("Gbb", func() {
 		BeforeEach(func() {
 			instance = New(localhost, token)
 		})
+		It("should return an error with insufficient arguments", func() {
+			Expect(instance.Run([]string{})).Should(MatchError(gbberror.ErrBadArguments))
+		})
+	})
+	Describe("Download file", func() {
+		var (
+			instance GoBurnBits
+		)
+		const (
+			localhost = "localhost"
+			token     = ""
+		)
+		BeforeEach(func() {
+			instance = New(localhost, token)
+		})
 		It("should fail with an error if no auth token is supplied", func() {
-			Expect(instance.HandleDownload([]string{})).Should(MatchError(gbberror.ErrNoAuthToken))
+			Expect(instance.Run([]string{"download"})).Should(MatchError(gbberror.ErrNoAuthToken))
 		})
 		It("should fail if no output direcotry is supplied to download", func() {
-			Expect(instance.HandleDownload([]string{"--authToken", "abc"})).Should(MatchError(gbberror.ErrNoOutputDir))
+			Expect(instance.Run([]string{"download", "--authToken", "abc"})).Should(MatchError(gbberror.ErrNoOutputDir))
 		})
 		It("should fail if only an empty output dir is supplied", func() {
-			Expect(instance.HandleDownload([]string{"--authToken", "abc", "--outputDir", ""})).Should(MatchError(gbberror.ErrNoOutputDir))
+			Expect(instance.Run([]string{"download", "--authToken", "abc", "--outputDir", ""})).Should(MatchError(gbberror.ErrNoOutputDir))
 		})
 		It("should fail if output dir is outside of the current directory (eg. ../)", func() {
-			Expect(instance.HandleDownload([]string{"--authToken", "abc", "--outputDir", "../jetsons"})).Should(MatchError(gbberror.ErrBadOutputDir))
+			Expect(instance.Run([]string{"download", "--authToken", "abc", "--outputDir", "../jetsons"})).Should(MatchError(gbberror.ErrBadOutputDir))
 		})
 
 		It("should call to the server and handle the response", func() {
@@ -139,8 +155,8 @@ var _ = Describe("Gbb", func() {
 			mockResp.Write(data)
 
 			client.EXPECT().Do(gomock.AssignableToTypeOf(req)).MaxTimes(1).Return(mockResp.Result(), nil)
-			args := []string{"--authToken", "abc", "--outputDir", relativeDir}
-			Expect(instance.HandleDownload(args)).ToNot(HaveOccurred())
+			args := []string{"download", "--authToken", "abc", "--outputDir", relativeDir}
+			Expect(instance.Run(args)).ToNot(HaveOccurred())
 
 			var filesResponse GBBDownloadFilesResponse
 			Expect(json.Unmarshal(data, &filesResponse)).ToNot(HaveOccurred())
@@ -154,7 +170,6 @@ var _ = Describe("Gbb", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(string(writtenData)).To(Equal(v.Code))
 			}
-
 		})
 	})
 })

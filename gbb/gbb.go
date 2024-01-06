@@ -44,8 +44,17 @@ func New(host string, token string) *GBB {
 }
 
 // Run starts the process of running the command line input
-func (g *GBB) Run(_ []string) error {
-	return gbberror.ErrNotYetImplemented
+func (g *GBB) Run(args []string) error {
+	if len(args) < 1 {
+		return gbberror.ErrBadArguments
+	}
+	cmd := args[0]
+	switch cmd {
+	case CMD_DOWNLOAD:
+		return g.HandleDownload(args[1:])
+	default:
+		return gbberror.ErrNotYetImplemented
+	}
 }
 
 type GBBDownloadFilesResponse struct {
@@ -89,7 +98,7 @@ func (g *GBB) handleServerCall(req *http.Request, expStatus int, responseData an
 // HandleDownload is responsible for parsing the necessary download arguments and fetching the files from the BitBurner server.
 // If there is an issue with any of the arguments or the download an error will be returned. Nil on success.
 func (g *GBB) HandleDownload(args []string) error {
-	var authToken string
+	fmt.Printf("Starting download...")
 	var outputDir string
 	const (
 		argAuthToken = "--authToken" //#nosec G101 -- This is a false positive
@@ -100,13 +109,13 @@ func (g *GBB) HandleDownload(args []string) error {
 		switch args[i] {
 		case argAuthToken:
 			i++
-			authToken = args[i]
+			g.AuthToken = strings.TrimSpace(args[i])
 		case argOutputDir:
 			i++
 			outputDir = strings.TrimSpace(args[i])
 		}
 	}
-	if strings.TrimSpace(authToken) == "" {
+	if g.AuthToken == "" {
 		return gbberror.ErrNoAuthToken
 	}
 	if len(outputDir) == 0 {

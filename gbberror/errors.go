@@ -6,11 +6,14 @@ var (
 	// Development errors
 	ErrNotYetImplemented = errors.New("not yet implemented")
 
+	// Misc driver errors
+	ErrBadArguments = errors.New("bad arguments")
+
 	// Auth'n & Auth'z errors
 	ErrNoAuthToken = errors.New("no auth token")
 
 	// File & Directory errors
-	ErrNoOutputDir  = errors.New("no output direcotry supplied")
+	ErrNoOutputDir  = errors.New("no output directory supplied")
 	ErrBadOutputDir = errors.New("bad output directory")
 	ErrFileIssue    = errors.New("file error")
 
