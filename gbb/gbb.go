@@ -138,7 +138,7 @@ func (g *GBB) WriteFiles(outputDir string, files []GBBDownloadFile) error {
 
 	for _, v := range files {
 		fp := path.Join(outputDir, v.Filename)
-		f, err := os.Create(fp)
+		f, err := os.Create(path.Clean(fp))
 		if err != nil {
 			failedFiles = append(failedFiles, fmt.Sprintf("%s (%s)", v.Filename, fp))
 			continue
