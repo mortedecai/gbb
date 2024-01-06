@@ -92,7 +92,7 @@ func (g *GBB) HandleDownload(args []string) error {
 	var authToken string
 	var outputDir string
 	const (
-		argAuthToken = "--authToken"
+		argAuthToken = "--authToken" //#nosec G101 -- This is a false positive
 		argOutputDir = "--outputDir"
 	)
 
@@ -113,7 +113,7 @@ func (g *GBB) HandleDownload(args []string) error {
 		return gbberror.ErrNoOutputDir
 	}
 
-	outputPath := path.Join(g.WorkingDir, outputDir)
+	outputPath := path.Join(g.WorkingDir, path.Clean(outputDir))
 	if !strings.HasPrefix(outputPath, g.WorkingDir) {
 		return fmt.Errorf("%w: %s is outside working directory", gbberror.ErrBadOutputDir, outputPath)
 	}
@@ -143,7 +143,11 @@ func (g *GBB) WriteFiles(outputDir string, files []GBBDownloadFile) error {
 			failedFiles = append(failedFiles, fmt.Sprintf("%s (%s)", v.Filename, fp))
 			continue
 		}
-		g.writeFile(f, v)
+		err = g.writeFile(f, v)
+		if err != nil {
+			failedFiles = append(failedFiles, fmt.Sprintf("%s (%s)", v.Filename, fp))
+			continue
+		}
 	}
 
 	if len(failedFiles) > 0 {
