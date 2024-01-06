@@ -1,8 +1,9 @@
-package gbb_test
+package gbb
 
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -13,7 +14,6 @@ import (
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
 
-	"github.com/mortedecai/go-burn-bits/gbb"
 	"github.com/mortedecai/go-burn-bits/gbb/mocks"
 	"github.com/mortedecai/go-burn-bits/gbberror"
 )
@@ -22,36 +22,85 @@ var _ = Describe("Gbb", func() {
 	It("should be possible to create a new gbb instance", func() {
 		host := "localhost:9990"
 		token := "abc"
-		g := gbb.New(host, token)
+		g := New(host, token)
 		Expect(g).ToNot(BeNil())
 		Expect(g.Host).To(Equal(host))
 		Expect(g.AuthToken).To(Equal(token))
 	})
 	Describe("Run", func() {
 		var (
-			instance gbb.GoBurnBits
+			instance GoBurnBits
 		)
 		const (
 			localhost = "localhost"
 			token     = "abc"
 		)
 		BeforeEach(func() {
-			instance = gbb.New(localhost, token)
+			instance = New(localhost, token)
 		})
 		It("should fail initially with not yet implemented", func() {
 			Expect(instance.Run([]string{""})).Should(MatchError(gbberror.NotYetImplemented))
 		})
 	})
+	Describe("Server Calls", func() {
+		req := createGenericRequest()
+		entries := []struct {
+			context          string
+			outcome          string
+			req              *http.Request
+			mockExpectations func(*gomock.Controller, *GBB)
+			errChecker       func(error)
+		}{
+			{
+				context: "client call fails",
+				outcome: "A RequestFailed error should be received",
+				mockExpectations: func(gc *gomock.Controller, gbb *GBB) {
+					client := mocks.NewMockGBBClient(gc)
+					gbb.Client = client
+					client.EXPECT().Do(gomock.AssignableToTypeOf(req)).MaxTimes(1).Return(nil, errors.New("doh"))
+				},
+				errChecker: func(err error) {
+					Expect(err).Should(MatchError(gbberror.RequestFailed))
+				},
+			},
+			{
+				context: "response has incorrect status",
+				outcome: "A RequestFailed error should be received",
+				mockExpectations: func(gc *gomock.Controller, gbb *GBB) {
+					client := mocks.NewMockGBBClient(gc)
+					gbb.Client = client
+					client.EXPECT().Do(gomock.AssignableToTypeOf(req)).MaxTimes(1).Return(createResponse(http.StatusTeapot), nil)
+				},
+				errChecker: func(err error) {
+					Expect(err).Should(MatchError(gbberror.UnexpectedResponse))
+				},
+			},
+		}
+
+		for _, e := range entries {
+			entry := e
+			instance := New("localhost", "abc")
+			Context(entry.context, func() {
+				It(entry.outcome, func() {
+					mockCtrl := gomock.NewController(GinkgoT())
+					defer mockCtrl.Finish()
+					entry.mockExpectations(mockCtrl, instance)
+					err := instance.handleServerCall(req, http.StatusOK, nil)
+					entry.errChecker(err)
+				})
+			})
+		}
+	})
 	Describe("Download file", func() {
 		var (
-			instance gbb.GoBurnBits
+			instance GoBurnBits
 		)
 		const (
 			localhost = "localhost"
 			token     = "abc"
 		)
 		BeforeEach(func() {
-			instance = gbb.New(localhost, token)
+			instance = New(localhost, token)
 		})
 		It("should fail with an error if no auth token is supplied", func() {
 			Expect(instance.HandleDownload([]string{})).Should(MatchError(gbberror.NoAuthToken))
@@ -65,6 +114,7 @@ var _ = Describe("Gbb", func() {
 		It("should fail if output dir is outside of the current directory (eg. ../)", func() {
 			Expect(instance.HandleDownload([]string{"--authToken", "abc", "--outputDir", "../jetsons"})).Should(MatchError(gbberror.BadOutputDir))
 		})
+
 		It("should call to the server and handle the response", func() {
 			wd, err := os.Getwd()
 			Expect(err).ToNot(HaveOccurred())
@@ -77,7 +127,7 @@ var _ = Describe("Gbb", func() {
 			relativeDir := dir[len(wd)+1:]
 
 			client := mocks.NewMockGBBClient(mockCtrl)
-			instance.(*gbb.GBB).Client = client
+			instance.(*GBB).Client = client
 
 			req, err := http.NewRequest(http.MethodGet, "http://localhost", bytes.NewBuffer([]byte("{}")))
 			Expect(err).ToNot(HaveOccurred())
@@ -92,7 +142,7 @@ var _ = Describe("Gbb", func() {
 			args := []string{"--authToken", "abc", "--outputDir", relativeDir}
 			Expect(instance.HandleDownload(args)).ToNot(HaveOccurred())
 
-			var filesResponse gbb.GBBDownloadFilesResponse
+			var filesResponse GBBDownloadFilesResponse
 			Expect(json.Unmarshal(data, &filesResponse)).ToNot(HaveOccurred())
 
 			entries, err := os.ReadDir(dir)
@@ -108,3 +158,14 @@ var _ = Describe("Gbb", func() {
 		})
 	})
 })
+
+func createGenericRequest() *http.Request {
+	req, _ := http.NewRequest(http.MethodGet, "http://localhost", bytes.NewBuffer([]byte("{}")))
+	return req
+}
+
+func createResponse(status int) *http.Response {
+	resp := httptest.NewRecorder()
+	resp.WriteHeader(status)
+	return resp.Result()
+}

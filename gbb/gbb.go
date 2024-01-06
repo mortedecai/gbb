@@ -60,6 +60,29 @@ type GBBDownloadFile struct {
 	RamUsage int    `json:"ramUsage,omitempty"`
 }
 
+func (g *GBB) handleServerCall(req *http.Request, expStatus int, responseData any) error {
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", g.AuthToken))
+
+	resp, err := g.Client.Do(req)
+	if err != nil {
+		return fmt.Errorf("%w: %s", gbberror.RequestFailed, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != expStatus {
+		return fmt.Errorf("%w: expected %d, got %d", gbberror.UnexpectedResponse, http.StatusOK, resp.StatusCode)
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("%w: %s", gbberror.ResponseReadFailed, err.Error())
+	}
+	err = json.Unmarshal(data, &responseData)
+	if err != nil {
+		return fmt.Errorf("%w: %s", gbberror.BadJSON, err.Error())
+	}
+
+	return nil
+}
+
 // HandleDownload is responsible for parsing the necessary download arguments and fetching the files from the BitBurner server.
 // If there is an issue with any of the arguments or the download an error will be returned. Nil on success.
 func (g *GBB) HandleDownload(args []string) error {
@@ -98,27 +121,12 @@ func (g *GBB) HandleDownload(args []string) error {
 
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s", g.Host), bytes.NewBuffer([]byte("{}")))
 	if err != nil {
-		return err
-	}
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", authToken))
-
-	resp, err := g.Client.Do(req)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: expected %d, got %d", gbberror.UnexpectedResponse, http.StatusOK, resp.StatusCode)
-	}
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("%w: %s", gbberror.ResponseReadFailed, err.Error())
+		return fmt.Errorf("%w: %s", gbberror.RequestFailed, err)
 	}
 	var downloadResults GBBDownloadFilesResponse
-	err = json.Unmarshal(data, &downloadResults)
-	if err != nil {
-		return fmt.Errorf("%w: %s", gbberror.BadJSON, err.Error())
+	if err = g.handleServerCall(req, http.StatusOK, &downloadResults); err != nil {
+		return err
 	}
-
 	if !downloadResults.Success {
 		return fmt.Errorf("%w: results file has success == false", gbberror.BitBurnerFailure)
 	}
