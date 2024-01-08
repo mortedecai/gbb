@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -107,6 +106,7 @@ var _ = Describe("Gbb", func() {
 			Expect(instance.Run([]string{})).Should(MatchError(gbberror.ErrBadArguments))
 		})
 	})
+
 	Describe("Download file", func() {
 		var (
 			instance GoBurnBits
@@ -166,11 +166,85 @@ var _ = Describe("Gbb", func() {
 			Expect(len(entries)).To(Equal(len(filesResponse.Data.Files)))
 
 			for _, v := range filesResponse.Data.Files {
-				writtenData, err := os.ReadFile(path.Join(dir, v.Filename))
+				writtenData, err := os.ReadFile(v.Filename.ToAbsolutePath(dir))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(string(writtenData)).To(Equal(v.Code))
 			}
 		})
+	})
+
+	Describe("WriteFiles", func() {
+		entries := []struct {
+			context         string
+			outcome         string
+			files           []GBBDownloadFile
+			errCheck        func(err error)
+			expFilesWritten []int
+		}{
+			{
+				context:  "empty file list",
+				outcome:  "no files written",
+				files:    []GBBDownloadFile{},
+				errCheck: func(err error) { Expect(err).ToNot(HaveOccurred()) },
+			},
+			{
+				context: "single file lis - zero entriest",
+				outcome: "one files written",
+				files: []GBBDownloadFile{
+					{
+						Filename: "",
+						Code:     "",
+						RamUsage: 0,
+					},
+				},
+				errCheck: func(err error) { Expect(err).ToNot(HaveOccurred()) },
+			},
+			{
+				context: "single file list - no directory",
+				outcome: "one files written",
+				files: []GBBDownloadFile{
+					{
+						Filename: "testFile1.js",
+						Code:     "// Hi\n// This is a file.",
+						RamUsage: 0,
+					},
+				},
+				errCheck: func(err error) { Expect(err).ToNot(HaveOccurred()) },
+			},
+			{
+				context: "single file list - in directory",
+				outcome: "one files written",
+				files: []GBBDownloadFile{
+					{
+						Filename: "foo/testFile1.js",
+						Code:     "// Hi\n// This is a file.",
+						RamUsage: 0,
+					},
+				},
+				errCheck: func(err error) { Expect(err).ToNot(HaveOccurred()) },
+			},
+		}
+		const localhost = "localhost"
+		for _, e := range entries {
+			entry := e
+			outputDir, _ := os.MkdirTemp("", "gbb")
+			Context(entry.context, func() {
+				It(entry.outcome, func() {
+					instance := New(localhost, "")
+					entry.errCheck(instance.WriteFiles(outputDir, entry.files))
+
+					for _, idx := range entry.expFilesWritten {
+						path := entry.files[idx].Filename.ToAbsolutePath(outputDir)
+						fi, err := os.Stat(path)
+						Expect(err).ToNot(HaveOccurred())
+						Expect(fi.IsDir()).To(BeFalse())
+						data, err := os.ReadFile(path)
+						Expect(err).ToNot(HaveOccurred())
+						Expect(string(data)).To(Equal(entry.files[idx].Code))
+					}
+				})
+			})
+		}
 	})
 })
 
