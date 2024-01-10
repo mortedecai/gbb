@@ -168,6 +168,7 @@ func (g *GBB) HandleDownload(args []string) error {
 
 func (g *GBB) WriteFiles(outputDir string, files []GBBDownloadFile) error {
 	failedFiles := make([]string, 0)
+	const failedFileStr = "%s (%s)"
 
 	for _, v := range files {
 		if !v.Filename.IsValid() {
@@ -177,18 +178,18 @@ func (g *GBB) WriteFiles(outputDir string, files []GBBDownloadFile) error {
 
 		if v.Filename.HasDir() {
 			if err := v.Filename.CreatePath(outputDir); err != nil {
-				failedFiles = append(failedFiles, fmt.Sprintf("%s (%s)", v.Filename, fp))
+				failedFiles = append(failedFiles, fmt.Sprintf(failedFileStr, v.Filename, fp))
 				continue
 			}
 		}
 		f, err := os.Create(path.Clean(fp))
 		if err != nil {
-			failedFiles = append(failedFiles, fmt.Sprintf("%s (%s)", v.Filename, fp))
+			failedFiles = append(failedFiles, fmt.Sprintf(failedFileStr, v.Filename, fp))
 			continue
 		}
 		err = g.writeFile(f, v)
 		if err != nil {
-			failedFiles = append(failedFiles, fmt.Sprintf("%s (%s)", v.Filename, fp))
+			failedFiles = append(failedFiles, fmt.Sprintf(failedFileStr, v.Filename, fp))
 			continue
 		}
 	}
