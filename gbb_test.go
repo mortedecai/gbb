@@ -14,10 +14,10 @@ import (
 var _ = Describe("Go Burn Bits", func() {
 
 	Describe("Initial basic test for coverage and script setup", func() {
-		It("should return 'Hello, World!'", func() {
-			Expect(greetings()).To(Equal("Hello, World!"))
+		It("should return 'Go Burn Bits'", func() {
+			Expect(greetings()).To(Equal("Go Burn Bits"))
 		})
-		It("should  print 'Hello, World!'", func() {
+		It("should  print 'Go Burn Bits'", func() {
 			reader, writer, err := os.Pipe()
 			Expect(err).ToNot(HaveOccurred())
 
@@ -50,7 +50,7 @@ var _ = Describe("Go Burn Bits", func() {
 			writer.Close()
 
 			str := strings.TrimSpace(<-out)
-			Expect(str).To(HavePrefix("Hello, World! [v0.0.0-test]"))
+			Expect(str).To(HavePrefix("Go Burn Bits [v0.0.0-test]"))
 		})
 	})
 })

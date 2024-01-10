@@ -12,7 +12,7 @@ var (
 )
 
 func greetings() string {
-	return "Hello, World!"
+	return "Go Burn Bits"
 }
 
 func Version() string {

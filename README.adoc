@@ -5,7 +5,7 @@ ifdef::env-github[]
 :caution-caption: :fire:
 :warning-caption: :warning:
 endif::[]
-:sonar-project-id: mortedecai_gbb
+:sonar-project-id: mortedecai_go-burn-bits
 :sonar-token: &token={REMOVE_ME_IF_NOT_PRIVATE}
 
 :img-quality-gate: https://sonarcloud.io/api/project_badges/measure?project={sonar-project-id}&metric=alert_status{sonar-token}
@@ -17,9 +17,9 @@ endif::[]
 
 :uri-analysis: https://sonarcloud.io/summary/new_code?id={sonar-project-id}
 
-= Go Burn Bits
+= Go Burn Bits (gbb)
 
-The intent of this repository is to provide command line utilities easing local development of scripts for use in the (Bit Burner)[https://github.com/bitburner-official/bitburner-src] game.
+The intent of this repository is to provide command line utilities easing local development of scripts for use in the https://github.com/bitburner-official/bitburner-src[Bit Burner] game.
 
 == Project Health
 

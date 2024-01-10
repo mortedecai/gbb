@@ -130,9 +130,8 @@ if [ ${PROJECT_SILENT} -ne 1 ]; then
 fi
 
 if [[ ${DRY_RUN} -eq 0 ]]; then
-#    git tag -a ${BUMPED_VERSION}
-#    git push --tags
-echo "HI"
+    git tag -a ${BUMPED_VERSION}
+    git push --tags
 else
     echo "${BUMPED_VERSION}"
     if [ ${PROJECT_SILENT} -ne 1 ]; then
