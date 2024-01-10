@@ -73,7 +73,7 @@ func (gfn GBBFileName) IsValid() bool {
 }
 
 func (gfn GBBFileName) HasDir() bool {
-	return strings.Index(gfn.String(), "/") >= 0
+	return strings.Contains(gfn.String(), "/")
 }
 
 func (gfn GBBFileName) String() string {
