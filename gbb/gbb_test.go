@@ -13,8 +13,8 @@ import (
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
 
-	"github.com/mortedecai/go-burn-bits/gbb/mocks"
-	"github.com/mortedecai/go-burn-bits/gbberror"
+	"github.com/mortedecai/gbb/gbb/mocks"
+	"github.com/mortedecai/gbb/gbberror"
 )
 
 var _ = Describe("Gbb", func() {
