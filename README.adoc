@@ -17,7 +17,7 @@ endif::[]
 
 :uri-analysis: https://sonarcloud.io/summary/new_code?id={sonar-project-id}
 
-= Go Burn Bits
+= Go Burn Bits (gbb)
 
 The intent of this repository is to provide command line utilities easing local development of scripts for use in the (Bit Burner)[https://github.com/bitburner-official/bitburner-src] game.
 
