@@ -5,7 +5,7 @@ ifdef::env-github[]
 :caution-caption: :fire:
 :warning-caption: :warning:
 endif::[]
-:sonar-project-id: mortedecai_go-burn-bits
+:sonar-project-id: mortedecai_gbb
 :sonar-token: &token={REMOVE_ME_IF_NOT_PRIVATE}
 
 :img-quality-gate: https://sonarcloud.io/api/project_badges/measure?project={sonar-project-id}&metric=alert_status{sonar-token}
@@ -38,7 +38,7 @@ The intent of this repository is to provide command line utilities easing local 
 
 To install the executable:
 
-`go install github.com/mortedecai/go-burn-bits@latest`
+`go install github.com/mortedecai/gbb@latest`
 
 == Usage
 
