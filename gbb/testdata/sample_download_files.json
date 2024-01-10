@@ -1,0 +1,1 @@
+{"success":true,"data":{"files":[{"filename":"n00dles.js","code":"/**\n * @param {NS} ns\n */\nexport async function main(ns) {\n    while(true) {\n        await ns.hack('n00dles');\n    }\n}\n","ramUsage":null}]}}

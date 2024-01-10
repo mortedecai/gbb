@@ -5,7 +5,7 @@ ifdef::env-github[]
 :caution-caption: :fire:
 :warning-caption: :warning:
 endif::[]
-:sonar-project-id: mortedecai_go-burn-bits
+:sonar-project-id: mortedecai_gbb
 :sonar-token: &token={REMOVE_ME_IF_NOT_PRIVATE}
 
 :img-quality-gate: https://sonarcloud.io/api/project_badges/measure?project={sonar-project-id}&metric=alert_status{sonar-token}
@@ -36,6 +36,26 @@ The intent of this repository is to provide command line utilities easing local 
 
 == Installation
 
-_TBD_
+To install the executable:
 
+`go install github.com/mortedecai/gbb@latest`
 
+== Usage
+
+=== Retrieve all files from BitBurner
+
+This will retrieve all files from the BitBurner API Server and write them blindly to the output directory.
+
+The output directory _*MUST*_ be a sub-directory of where `gbb` is being run from.
+
+WARN: All existing files in `outputDir` will be overwritten without confirmation.
+
+```shell
+gbb download --authToken <BitBurner auth token> --outputDir <output directory>
+```
+
+For example, to download them to `/var/bb`, with an auth token `abc`:
+
+```shell
+gbb download --authToken abc --outputDir /var/bb
+```

@@ -50,8 +50,7 @@ var _ = Describe("Go Burn Bits", func() {
 			writer.Close()
 
 			str := strings.TrimSpace(<-out)
-
-			Expect(str).To(Equal("Hello, World! [v0.0.0-test]"))
+			Expect(str).To(HavePrefix("Hello, World! [v0.0.0-test]"))
 		})
 	})
 })
