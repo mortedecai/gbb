@@ -36,6 +36,26 @@ The intent of this repository is to provide command line utilities easing local 
 
 == Installation
 
-_TBD_
+To install the executable:
 
+`go install github.com/mortedecai/go-burn-bits@latest`
 
+== Usage
+
+=== Retrieve all files from BitBurner
+
+This will retrieve all files from the BitBurner API Server and write them blindly to the output directory.
+
+The output directory _*MUST*_ be a sub-directory of where `gbb` is being run from.
+
+WARN: All existing files in `outputDir` will be overwritten without confirmation.
+
+```shell
+gbb download --authToken <BitBurner auth token> --outputDir <output directory>
+```
+
+For example, to download them to `/var/bb`, with an auth token `abc`:
+
+```shell
+gbb download --authToken abc --outputDir /var/bb
+```

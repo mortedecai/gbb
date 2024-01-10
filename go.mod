@@ -1,4 +1,4 @@
-module github.com/mortedecai/go-burn-bits
+module github.com/mortedecai/gbb
 
 go 1.21
 
