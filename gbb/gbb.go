@@ -10,7 +10,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/mortedecai/go-burn-bits/gbberror"
+	"github.com/mortedecai/gbb/gbberror"
 )
 
 // GoBurnBits is the application interface to split the bulk of processing code out of the main package.
@@ -23,7 +23,7 @@ type GBBClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-//go:generate mockgen -destination=./mocks/mock_client.go -package=mocks github.com/mortedecai/go-burn-bits/gbb GBBClient
+//go:generate mockgen -destination=./mocks/mock_client.go -package=mocks github.com/mortedecai/gbb/gbb GBBClient
 
 type GBB struct {
 	Host       string

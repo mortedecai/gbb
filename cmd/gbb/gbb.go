@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mortedecai/go-burn-bits/gbb"
+	"github.com/mortedecai/gbb/gbb"
 )
 
 var (
