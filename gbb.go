@@ -12,6 +12,10 @@ var (
 	logger  *zap.SugaredLogger
 )
 
+func init() {
+	logger = getLogger()
+}
+
 func greetings() string {
 	return "Go Burn Bits"
 }
@@ -39,8 +43,8 @@ func loadConfig() *config.GoBurnBits {
 }
 
 func main() {
-	logger = getLogger()
-	logger.Infow("Go Burn Bits", "Version", Version())
+	logger.Infof("%s [%s]", greetings(), Version())
+	logger.Infow(greetings(), "Version", Version())
 	cfg := loadConfig()
 
 	err := gbb.New(cfg).Run(os.Args[1:])
