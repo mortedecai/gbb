@@ -25,7 +25,7 @@ type GBBClient interface {
 
 //go:generate mockgen -destination=./mocks/mock_client.go -package=mocks github.com/mortedecai/gbb/gbb GBBClient
 
-type GBB struct {
+type GBBOld struct {
 	Host       string
 	AuthToken  string
 	Client     GBBClient
@@ -36,15 +36,15 @@ const (
 	CMD_DOWNLOAD = "download"
 )
 
-// New creates a GoBurnBits instance
-func New(host string, token string) *GBB {
+// OldNew creates a GoBurnBits instance
+func OldNew(host string, token string) *GBBOld {
 	wd, _ := os.Getwd()
 
-	return &GBB{Host: host, AuthToken: token, Client: http.DefaultClient, WorkingDir: wd}
+	return &GBBOld{Host: host, AuthToken: token, Client: http.DefaultClient, WorkingDir: wd}
 }
 
 // Run starts the process of running the command line input
-func (g *GBB) Run(args []string) error {
+func (g *GBBOld) Run(args []string) error {
 	if len(args) < 1 {
 		return gbberror.ErrBadArguments
 	}
@@ -96,7 +96,7 @@ type GBBDownloadFile struct {
 	RamUsage int         `json:"ramUsage,omitempty"`
 }
 
-func (g *GBB) handleServerCall(req *http.Request, expStatus int, responseData any) error {
+func (g *GBBOld) handleServerCall(req *http.Request, expStatus int, responseData any) error {
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", g.AuthToken))
 
 	resp, err := g.Client.Do(req)
@@ -121,7 +121,7 @@ func (g *GBB) handleServerCall(req *http.Request, expStatus int, responseData an
 
 // HandleDownload is responsible for parsing the necessary download arguments and fetching the files from the BitBurner server.
 // If there is an issue with any of the arguments or the download an error will be returned. Nil on success.
-func (g *GBB) HandleDownload(args []string) error {
+func (g *GBBOld) HandleDownload(args []string) error {
 	fmt.Printf("Starting download...")
 	var outputDir string
 	const (
@@ -166,7 +166,7 @@ func (g *GBB) HandleDownload(args []string) error {
 	return g.WriteFiles(outputPath, downloadResults.Data.Files)
 }
 
-func (g *GBB) WriteFiles(outputDir string, files []GBBDownloadFile) error {
+func (g *GBBOld) WriteFiles(outputDir string, files []GBBDownloadFile) error {
 	failedFiles := make([]string, 0)
 	const failedFileStr = "%s (%s)"
 
@@ -205,7 +205,7 @@ func (g *GBB) WriteFiles(outputDir string, files []GBBDownloadFile) error {
 	return nil
 }
 
-func (g *GBB) writeFile(f *os.File, v GBBDownloadFile) error {
+func (g *GBBOld) writeFile(f *os.File, v GBBDownloadFile) error {
 	defer f.Close()
 	totalWritten := 0
 	for attempts := 0; totalWritten < len(v.Code) && attempts < 10; attempts++ {

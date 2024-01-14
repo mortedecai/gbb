@@ -21,7 +21,7 @@ var _ = Describe("Gbb", func() {
 	It("should be possible to create a new gbb instance", func() {
 		host := "localhost:9990"
 		token := "abc"
-		g := New(host, token)
+		g := OldNew(host, token)
 		Expect(g).ToNot(BeNil())
 		Expect(g.Host).To(Equal(host))
 		Expect(g.AuthToken).To(Equal(token))
@@ -35,7 +35,7 @@ var _ = Describe("Gbb", func() {
 			token     = "abc"
 		)
 		BeforeEach(func() {
-			instance = New(localhost, token)
+			instance = OldNew(localhost, token)
 		})
 		It("should fail with bad arguments if none given", func() {
 			Expect(instance.Run([]string{})).Should(MatchError(gbberror.ErrBadArguments))
@@ -47,13 +47,13 @@ var _ = Describe("Gbb", func() {
 			context          string
 			outcome          string
 			req              *http.Request
-			mockExpectations func(*gomock.Controller, *GBB)
+			mockExpectations func(*gomock.Controller, *GBBOld)
 			errChecker       func(error)
 		}{
 			{
 				context: "client call fails",
 				outcome: "A RequestFailed error should be received",
-				mockExpectations: func(gc *gomock.Controller, gbb *GBB) {
+				mockExpectations: func(gc *gomock.Controller, gbb *GBBOld) {
 					client := mocks.NewMockGBBClient(gc)
 					gbb.Client = client
 					client.EXPECT().Do(gomock.AssignableToTypeOf(req)).MaxTimes(1).Return(nil, errors.New("doh"))
@@ -65,7 +65,7 @@ var _ = Describe("Gbb", func() {
 			{
 				context: "response has incorrect status",
 				outcome: "A RequestFailed error should be received",
-				mockExpectations: func(gc *gomock.Controller, gbb *GBB) {
+				mockExpectations: func(gc *gomock.Controller, gbb *GBBOld) {
 					client := mocks.NewMockGBBClient(gc)
 					gbb.Client = client
 					client.EXPECT().Do(gomock.AssignableToTypeOf(req)).MaxTimes(1).Return(createResponse(http.StatusTeapot), nil)
@@ -78,7 +78,7 @@ var _ = Describe("Gbb", func() {
 
 		for _, e := range entries {
 			entry := e
-			instance := New("localhost", "abc")
+			instance := OldNew("localhost", "abc")
 			Context(entry.context, func() {
 				It(entry.outcome, func() {
 					mockCtrl := gomock.NewController(GinkgoT())
@@ -100,7 +100,7 @@ var _ = Describe("Gbb", func() {
 			token     = "abc"
 		)
 		BeforeEach(func() {
-			instance = New(localhost, token)
+			instance = OldNew(localhost, token)
 		})
 		It("should return an error with insufficient arguments", func() {
 			Expect(instance.Run([]string{})).Should(MatchError(gbberror.ErrBadArguments))
@@ -116,7 +116,7 @@ var _ = Describe("Gbb", func() {
 			token     = ""
 		)
 		BeforeEach(func() {
-			instance = New(localhost, token)
+			instance = OldNew(localhost, token)
 		})
 		It("should fail with an error if no auth token is supplied", func() {
 			Expect(instance.Run([]string{"download"})).Should(MatchError(gbberror.ErrNoAuthToken))
@@ -143,7 +143,7 @@ var _ = Describe("Gbb", func() {
 			relativeDir := dir[len(wd)+1:]
 
 			client := mocks.NewMockGBBClient(mockCtrl)
-			instance.(*GBB).Client = client
+			instance.(*GBBOld).Client = client
 
 			req, err := http.NewRequest(http.MethodGet, "http://localhost", bytes.NewBuffer([]byte("{}")))
 			Expect(err).ToNot(HaveOccurred())
@@ -230,7 +230,7 @@ var _ = Describe("Gbb", func() {
 			outputDir, _ := os.MkdirTemp("", "gbb")
 			Context(entry.context, func() {
 				It(entry.outcome, func() {
-					instance := New(localhost, "")
+					instance := OldNew(localhost, "")
 					entry.errCheck(instance.WriteFiles(outputDir, entry.files))
 
 					for _, idx := range entry.expFilesWritten {
