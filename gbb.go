@@ -1,10 +1,9 @@
 package main
 
 import (
-	"github.com/mortedecai/gbb/config"
-	"github.com/mortedecai/gbb/gbb"
+	"github.com/mortedecai/gbb/app"
 	"go.uber.org/zap"
-	"os"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -16,41 +15,23 @@ func init() {
 	logger = getLogger()
 }
 
-func greetings() string {
-	return "Go Burn Bits"
-}
-
-func Version() string {
-	return version
-}
-
 func getLogger() *zap.SugaredLogger {
-	if l, err := zap.NewDevelopment(); err == nil {
+	if l, err := zap.NewProduction(zap.IncreaseLevel(zapcore.ErrorLevel)); err == nil {
 		logger = l.Sugar().Named("gbb")
 	}
 	return logger
 }
 
-func loadConfig() *config.GoBurnBits {
-	var cfg *config.GoBurnBits
+func main() {
+	var a *app.App
 	var err error
 
-	if cfg, err = config.FromConfig(); err != nil {
-		logger.Errorw("Load Configuration", "Error", err)
-		cfg = config.Default()
-	}
-	return cfg
-}
-
-func main() {
-	logger.Infof("%s [%s]", greetings(), Version())
-	logger.Infow(greetings(), "Version", Version())
-	cfg := loadConfig()
-
-	err := gbb.New(cfg).Run(os.Args[1:])
-	if err != nil {
+	if a, err = app.New(version); err != nil {
 		logger.Errorw("Command Result", "Result", "Error", "Details", err)
 		return
 	}
-	logger.Infow("Command Result", "Result", "Success")
+	if err = a.Run(); err != nil {
+		logger.Errorw("Command Result", "Result", "Error", "Error", err)
+	}
+	logger.Debugw("Command Result", "Result", "Success")
 }
