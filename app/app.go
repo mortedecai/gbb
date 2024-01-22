@@ -25,7 +25,7 @@ func (a *App) SetupCommands(version string) {
 	if a.cmd, err = commands.Root(version); err != nil {
 		panic(err)
 	}
-	if err = commands.Download(a.cmd); err != nil {
+	if _, err = commands.Download(a.cmd); err != nil {
 		panic(err)
 	}
 }

@@ -48,7 +48,7 @@ func (ro *rootOption) AuthToken() string {
 }
 
 func (ro *rootOption) Valid() bool {
-	return ro.host == "" && ro.port == 0 && ro.authToken == ""
+	return ro.host != "" && ro.port != 0 && ro.authToken != ""
 }
 
 func (ro *rootOption) AddAuth(req *http.Request) *http.Request {

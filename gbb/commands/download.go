@@ -22,6 +22,7 @@ THE SOFTWARE.
 package commands
 
 import (
+	"flag"
 	"fmt"
 	"github.com/mortedecai/gbb/gbb"
 
@@ -41,7 +42,12 @@ func (do *downloadOption) Valid() bool {
 	return do.destination != "" && do.rootOption.Valid()
 }
 
-func Download(rootCmd *cobra.Command) error {
+type cobraCommand interface {
+	Flags() *flag.FlagSet
+	PersistentFlags() *flag.FlagSet
+}
+
+func Download(rootCmd *cobra.Command) (*cobra.Command, error) {
 
 	// downloadCmd represents the download command
 	var downloadCmd = &cobra.Command{
@@ -54,9 +60,9 @@ func Download(rootCmd *cobra.Command) error {
 	downloadCmd.Flags().StringP("destination", "d", "./", "The base directory to download files into (Default: './').")
 	rootCmd.AddCommand(downloadCmd)
 	if err := downloadCmd.MarkFlagDirname("destination"); err != nil {
-		return err
+		return nil, err
 	}
-	return downloadCmd.MarkFlagRequired("destination")
+	return downloadCmd, downloadCmd.MarkFlagRequired("destination")
 }
 
 func handleDownload(cmd *cobra.Command, args []string) error {
