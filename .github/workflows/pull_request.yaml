@@ -114,5 +114,5 @@ jobs:
             -Dsonar.tests=.
             -Dsonar.test.exclusions=**/vendor/**
             -Dsonar.test.inclusions=**/*_test.go,,./*_test.go
-            -Dsonar.go.coverage.reportPaths=.reports/coverage.out
-            -Dsonar.go.tests.reportPaths=.reports/unit_test.json
+            -Dsonar.go.coverage.reportPaths=coverage.out
+            -Dsonar.go.tests.reportPaths=unit_test.json
