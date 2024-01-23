@@ -96,6 +96,8 @@ jobs:
 
       - name: Set version env
         run: echo "CUR_PROJECT_VERSION=$(./project bump -r $PWD -d -v alpha -s)" >> "$GITHUB_ENV"
+      - name: Find coverage reports
+        run: find . -name "coverage.out"
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
@@ -113,6 +115,6 @@ jobs:
             -Dsonar.exclusions=**/*_test.go,**/mocks/*.go,**/vendor/**,**/testing/integration/**/*.go,**/*.json
             -Dsonar.tests=.
             -Dsonar.test.exclusions=**/vendor/**
-            -Dsonar.test.inclusions=**/*_test.go,,./*_test.go
-            -Dsonar.go.coverage.reportPaths=coverage.out
-            -Dsonar.go.tests.reportPaths=unit_test.json
+            -Dsonar.test.inclusions=**/*_test.go
+            -Dsonar.go.coverage.reportPaths=.reports/coverage.out
+            -Dsonar.go.tests.reportPaths=.reports/unit_test.json
