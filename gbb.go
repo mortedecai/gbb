@@ -11,6 +11,13 @@ var (
 	logger  *zap.SugaredLogger
 )
 
+const (
+	cmdResMsg  = "GBB Result"
+	resMsg     = "Result"
+	errResult  = "Error"
+	detailsMsg = "Details"
+)
+
 func init() {
 	logger = getLogger()
 }
@@ -23,17 +30,10 @@ func getLogger() *zap.SugaredLogger {
 }
 
 func main() {
-	const cmdResMsg = "Command Result"
-	const resMsg = "Result"
-	const errResult = "Error"
-	const detailsMsg = "Details"
 	var a *app.App
 	var err error
 
-	if a, err = app.New(version); err != nil {
-		logger.Errorw(cmdResMsg, resMsg, errResult, detailsMsg, err)
-		return
-	}
+	a = app.New(version)
 	if err = a.Run(); err != nil {
 		logger.Errorw(cmdResMsg, resMsg, errResult, detailsMsg, err)
 	}

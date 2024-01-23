@@ -102,11 +102,10 @@ var _ = Describe("App", func() {
 				if entry.addDir {
 					os.Args = append(os.Args, tempDir)
 				}
-				app, err := app.New(version)
-				Expect(err).ToNot(HaveOccurred())
+				a := app.New(version)
 
 				f := func() {
-					if err := app.Run(); err != nil {
+					if err := a.Run(); err != nil {
 						panic(err)
 					}
 				}

@@ -74,10 +74,7 @@ Usage examples to come`,
 	rootCmd.PersistentFlags().StringP("host", "H", "localhost", "host to connect to (default is `localhost`)")
 	rootCmd.PersistentFlags().IntP("port", "p", 9990, "port to connect to host on (default is 9990)")
 	rootCmd.PersistentFlags().StringP("authToken", "a", "", "BitBurner Server API Key")
-	if err := rootCmd.MarkPersistentFlagRequired("authToken"); err != nil {
-		return nil, err
-	}
-	return rootCmd, nil
+	return rootCmd, rootCmd.MarkPersistentFlagRequired("authToken")
 }
 
 func handleCommonFlags(cmd *cobra.Command) (host string, port int, authToken string, err error) {

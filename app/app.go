@@ -10,10 +10,10 @@ type App struct {
 	cmd *cobra.Command
 }
 
-func New(version string) (*App, error) {
+func New(version string) *App {
 	app := &App{}
 	app.SetupCommands(version)
-	return app, nil
+	return app
 }
 
 func (a *App) Run() error {
