@@ -113,6 +113,6 @@ jobs:
             -Dsonar.exclusions=**/*_test.go,**/mocks/*.go,**/vendor/**,**/testing/integration/**/*.go,**/*.json
             -Dsonar.tests=.
             -Dsonar.test.exclusions=**/vendor/**
-            -Dsonar.test.inclusions=**/*_test.go
+            -Dsonar.test.inclusions=**/*_test.go,,./*_test.go
             -Dsonar.go.coverage.reportPaths=.reports/coverage.out
             -Dsonar.go.tests.reportPaths=.reports/unit_test.json
