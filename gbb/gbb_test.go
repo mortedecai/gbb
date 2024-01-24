@@ -173,7 +173,6 @@ var _ = Describe("Gbb", func() {
 				errCheck: func(err error) { Expect(err).ToNot(HaveOccurred()) },
 			},
 		}
-		const localhost = "localhost"
 		for _, e := range entries {
 			entry := e
 			outputDir, _ := os.MkdirTemp("", "gbb")

@@ -22,7 +22,6 @@ THE SOFTWARE.
 package commands
 
 import (
-	"flag"
 	"fmt"
 	"github.com/mortedecai/gbb/gbb"
 
@@ -40,11 +39,6 @@ func (do *downloadOption) Destination() string {
 
 func (do *downloadOption) Valid() bool {
 	return do.destination != "" && do.rootOption.Valid()
-}
-
-type cobraCommand interface {
-	Flags() *flag.FlagSet
-	PersistentFlags() *flag.FlagSet
 }
 
 func Download(rootCmd *cobra.Command) (*cobra.Command, error) {
