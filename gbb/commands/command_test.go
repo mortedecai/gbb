@@ -88,6 +88,13 @@ var _ = Describe("Command Integration Test", func() {
 				shouldPanic: false,
 				addDir:      true,
 			},
+			{
+				context:     "string for port",
+				outcome:     "should panic",
+				args:        []string{"gbb", "download", "-a", "abc", "-p", "a23a4", "-d"},
+				shouldPanic: true,
+				addDir:      true,
+			},
 		},
 	}
 	for cmd, testEntries := range entries {

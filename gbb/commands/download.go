@@ -66,7 +66,7 @@ func handleDownload(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	opt.destination, err = cmd.Flags().GetString("destination")
+	opt.destination, err = flagReader.GetString(cmd, "destination")
 	if err != nil {
 		return err
 	}

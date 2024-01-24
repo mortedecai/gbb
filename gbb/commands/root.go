@@ -78,13 +78,14 @@ Usage examples to come`,
 }
 
 func handleCommonFlags(cmd *cobra.Command) (host string, port int, authToken string, err error) {
-	if host, err = cmd.Flags().GetString("host"); err != nil {
+	//if host, err = cmd.Flags().GetString("host"); err != nil {
+	if host, err = flagReader.GetString(cmd, "host"); err != nil {
 		return
 	}
-	if port, err = cmd.Flags().GetInt("port"); err != nil {
+	if port, err = flagReader.GetInt(cmd, "port"); err != nil {
 		return
 	}
-	if authToken, err = cmd.Flags().GetString("authToken"); err != nil {
+	if authToken, err = flagReader.GetString(cmd, "authToken"); err != nil {
 		return
 	}
 	if host = strings.TrimSpace(host); host == "" {
