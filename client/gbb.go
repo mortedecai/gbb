@@ -1,4 +1,4 @@
-package gbb
+package client
 
 import (
 	"bytes"
@@ -17,7 +17,7 @@ type GBBClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-//go:generate mockgen -destination=./mocks/mock_client.go -package=mocks github.com/mortedecai/gbb/gbb GBBClient
+//go:generate mockgen -destination=./mocks/mock_client.go -package=mocks github.com/mortedecai/client/client GBBClient
 
 var (
 	Client GBBClient = http.DefaultClient

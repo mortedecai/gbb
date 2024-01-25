@@ -1,4 +1,4 @@
-package gbb
+package client
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
 
-	"github.com/mortedecai/gbb/gbb/mocks"
+	"github.com/mortedecai/gbb/client/mocks"
 	"github.com/mortedecai/gbb/gbberror"
 )
 
@@ -80,7 +80,7 @@ var _ = Describe("Gbb", func() {
 			Expect(err).ToNot(HaveOccurred())
 			mockCtrl := gomock.NewController(GinkgoT())
 			defer mockCtrl.Finish()
-			dir, err := os.MkdirTemp(wd, "gbb")
+			dir, err := os.MkdirTemp(wd, "client")
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(dir)
 
@@ -176,7 +176,7 @@ var _ = Describe("Gbb", func() {
 		}
 		for _, e := range entries {
 			entry := e
-			outputDir, _ := os.MkdirTemp("", "gbb")
+			outputDir, _ := os.MkdirTemp("", "client")
 			Context(entry.context, func() {
 				It(entry.outcome, func() {
 					entry.errCheck(WriteFiles(outputDir, entry.files))

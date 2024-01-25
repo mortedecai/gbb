@@ -23,7 +23,7 @@ package commands
 
 import (
 	"fmt"
-	"github.com/mortedecai/gbb/gbb"
+	"github.com/mortedecai/gbb/client"
 
 	"github.com/spf13/cobra"
 )
@@ -72,5 +72,5 @@ func handleDownload(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("Downloading from http://%s:%d with token len %d to %s\n", opt.host, opt.port, len(opt.authToken), opt.destination)
-	return gbb.HandleDownload(opt)
+	return client.HandleDownload(opt)
 }

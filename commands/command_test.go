@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/mortedecai/gbb/gbb"
-	"github.com/mortedecai/gbb/gbb/mocks"
+	"github.com/mortedecai/gbb/client"
+	"github.com/mortedecai/gbb/client/mocks"
 	"github.com/mortedecai/gbb/response"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -27,14 +27,14 @@ var _ = Describe("Command Integration Test", func() {
 	BeforeEach(func() {
 		// Cobra uses the os.Args value directly. Capture the original arguments for reversion after each test
 		originalArgs = os.Args
-		if t, err := os.MkdirTemp("", "gbb-*"); err != nil {
+		if t, err := os.MkdirTemp("", "client-*"); err != nil {
 			Fail("could not create temp directory")
 		} else {
 			tempDir = t
 		}
 		ctrl := gomock.NewController(GinkgoT())
 		mockClient = mocks.NewMockGBBClient(ctrl)
-		gbb.Client = mockClient
+		client.Client = mockClient
 	})
 	AfterEach(func() {
 		// Restore os.Args value
@@ -59,40 +59,40 @@ var _ = Describe("Command Integration Test", func() {
 			{
 				context:     "no authToken",
 				outcome:     "should panic",
-				args:        []string{"gbb", "download", "-H", "localhost"},
+				args:        []string{"client", "download", "-H", "localhost"},
 				shouldPanic: true,
 			},
 			{
 				context:     "all supplied",
 				outcome:     "should not panic",
-				args:        []string{"gbb", "download", "-H", "localhost", "-p", "9990", "-a", "abc", "-d"},
+				args:        []string{"client", "download", "-H", "localhost", "-p", "9990", "-a", "abc", "-d"},
 				shouldPanic: false,
 				addDir:      true,
 			},
 			{
 				context:     "no download dir",
 				outcome:     "should panic",
-				args:        []string{"gbb", "download", "-H", "localhost", "-p", "9990", "-a", "abc"},
+				args:        []string{"client", "download", "-H", "localhost", "-p", "9990", "-a", "abc"},
 				shouldPanic: true,
 			},
 			{
 				context:     "no host",
 				outcome:     "should not panic",
-				args:        []string{"gbb", "download", "-p", "9990", "-a", "abc", "-d"},
+				args:        []string{"client", "download", "-p", "9990", "-a", "abc", "-d"},
 				shouldPanic: false,
 				addDir:      true,
 			},
 			{
 				context:     "only auth token & output dir",
 				outcome:     "should not panic",
-				args:        []string{"gbb", "download", "-a", "abc", "-d"},
+				args:        []string{"client", "download", "-a", "abc", "-d"},
 				shouldPanic: false,
 				addDir:      true,
 			},
 			{
 				context:     "string for port",
 				outcome:     "should panic",
-				args:        []string{"gbb", "download", "-a", "abc", "-p", "a23a4", "-d"},
+				args:        []string{"client", "download", "-a", "abc", "-p", "a23a4", "-d"},
 				shouldPanic: true,
 				addDir:      true,
 			},

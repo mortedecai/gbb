@@ -24,7 +24,7 @@ func init() {
 
 func getLogger() *zap.SugaredLogger {
 	if l, err := zap.NewProduction(zap.IncreaseLevel(zapcore.ErrorLevel)); err == nil {
-		logger = l.Sugar().Named("gbb")
+		logger = l.Sugar().Named("client")
 	}
 	return logger
 }

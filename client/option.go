@@ -1,4 +1,4 @@
-package gbb
+package client
 
 import "net/http"
 

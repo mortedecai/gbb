@@ -58,9 +58,9 @@ func (ro *rootOption) AddAuth(req *http.Request) *http.Request {
 
 func Root(version string) (*cobra.Command, error) {
 	rootCmd := &cobra.Command{
-		Use:   "gbb",
-		Short: "gbb provides file transfer capabilties for BitBurner",
-		Long: `gbb is a suite of tools to help in the development of BitBurner scripts locally and
+		Use:   "client",
+		Short: "client provides file transfer capabilties for BitBurner",
+		Long: `client is a suite of tools to help in the development of BitBurner scripts locally and
 transfer them into the BitBurner game via the API Server.
 
 Usage examples to come`,

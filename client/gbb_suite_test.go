@@ -1,4 +1,4 @@
-package gbb_test
+package client_test
 
 import (
 	"testing"
