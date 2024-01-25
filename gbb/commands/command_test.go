@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/mortedecai/gbb/gbb"
 	"github.com/mortedecai/gbb/gbb/mocks"
-	response2 "github.com/mortedecai/gbb/gbb/response"
+	"github.com/mortedecai/gbb/response"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
@@ -138,10 +138,10 @@ var _ = Describe("Command Integration Test", func() {
 })
 
 func createEmptyDownloadResponse() *http.Response {
-	basicResponse := response2.GBBDownloadFilesResponse{
+	basicResponse := response.GBBDownloadFilesResponse{
 		Success: true,
-		Data: response2.GBBFileDownloadData{
-			Files: make([]response2.GBBDownloadFile, 0),
+		Data: response.GBBFileDownloadData{
+			Files: make([]response.GBBDownloadFile, 0),
 		},
 	}
 	data, err := json.Marshal(basicResponse)

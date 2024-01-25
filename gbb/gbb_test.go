@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/mortedecai/gbb/gbb/response"
+	"github.com/mortedecai/gbb/response"
 	"net/http"
 	"net/http/httptest"
 	"os"
