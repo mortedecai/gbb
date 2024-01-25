@@ -1,9 +1,8 @@
 package app
 
 import (
+	commands2 "github.com/mortedecai/gbb/commands"
 	"github.com/spf13/cobra"
-
-	"github.com/mortedecai/gbb/gbb/commands"
 )
 
 type App struct {
@@ -22,10 +21,10 @@ func (a *App) Run() error {
 
 func (a *App) SetupCommands(version string) {
 	var err error
-	if a.cmd, err = commands.Root(version); err != nil {
+	if a.cmd, err = commands2.Root(version); err != nil {
 		panic(err)
 	}
-	if _, err = commands.Download(a.cmd); err != nil {
+	if _, err = commands2.Download(a.cmd); err != nil {
 		panic(err)
 	}
 }

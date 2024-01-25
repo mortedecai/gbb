@@ -2,7 +2,7 @@ package commands
 
 import (
 	"errors"
-	"github.com/mortedecai/gbb/gbb/commands/mocks"
+	"github.com/mortedecai/gbb/commands/mocks"
 	"github.com/mortedecai/gbb/gbberror"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
