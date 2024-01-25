@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/mortedecai/gbb/gbb/response"
+	"github.com/mortedecai/gbb/gbberror"
 	"io"
 	"net/http"
 	"os"
 	"path"
-	"strings"
-
-	"github.com/mortedecai/gbb/gbberror"
 )
 
 // GBBClient is an interface to the http.Client methods used for mocking purposes
@@ -23,45 +22,6 @@ type GBBClient interface {
 var (
 	Client GBBClient = http.DefaultClient
 )
-
-type GBBDownloadFilesResponse struct {
-	Success bool                `json:"success"`
-	Data    GBBFileDownloadData `json:"data,omitempty"`
-}
-
-type GBBFileDownloadData struct {
-	Files []GBBDownloadFile `json:"files,omitempty"`
-}
-
-type GBBFileName string
-
-func (gfn GBBFileName) IsValid() bool {
-	return gfn != ""
-}
-
-func (gfn GBBFileName) HasDir() bool {
-	return strings.Contains(gfn.String(), "/")
-}
-
-func (gfn GBBFileName) String() string {
-	return string(gfn)
-}
-
-func (gfn GBBFileName) ToAbsolutePath(outputDir string) string {
-	return path.Join(outputDir, path.Clean(gfn.String()))
-}
-
-func (gfn GBBFileName) CreatePath(outputDir string) error {
-	absPath := gfn.ToAbsolutePath(outputDir)
-	dirList := path.Dir(absPath)
-	return os.MkdirAll(dirList, 0750)
-}
-
-type GBBDownloadFile struct {
-	Filename GBBFileName `json:"filename"`
-	Code     string      `json:"code,omitempty"`
-	RamUsage int         `json:"ramUsage,omitempty"`
-}
 
 func handleServerCall(req *http.Request, expStatus int, responseData any) error {
 	resp, err := Client.Do(req)
@@ -94,7 +54,7 @@ func HandleDownload(do DownloadOption) error {
 	}
 	req = do.AddAuth(req)
 
-	var downloadResults GBBDownloadFilesResponse
+	var downloadResults response.GBBDownloadFilesResponse
 	if err = handleServerCall(req, http.StatusOK, &downloadResults); err != nil {
 		return err
 	}
@@ -105,7 +65,7 @@ func HandleDownload(do DownloadOption) error {
 	return WriteFiles(path.Clean(do.Destination()), downloadResults.Data.Files)
 }
 
-func WriteFiles(outputDir string, files []GBBDownloadFile) error {
+func WriteFiles(outputDir string, files []response.GBBDownloadFile) error {
 	failedFiles := make([]string, 0)
 	const failedFileStr = "%s (%s)"
 
@@ -144,7 +104,7 @@ func WriteFiles(outputDir string, files []GBBDownloadFile) error {
 	return nil
 }
 
-func writeFile(f *os.File, v GBBDownloadFile) error {
+func writeFile(f *os.File, v response.GBBDownloadFile) error {
 	defer f.Close()
 	totalWritten := 0
 	for attempts := 0; totalWritten < len(v.Code) && attempts < 10; attempts++ {

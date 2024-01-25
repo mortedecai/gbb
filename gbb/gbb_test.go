@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mortedecai/gbb/gbb/response"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -108,7 +109,7 @@ var _ = Describe("Gbb", func() {
 			client.EXPECT().Do(gomock.AssignableToTypeOf(req)).MaxTimes(1).Return(mockResp.Result(), nil)
 			Expect(HandleDownload(opt)).ToNot(HaveOccurred())
 
-			var filesResponse GBBDownloadFilesResponse
+			var filesResponse response.GBBDownloadFilesResponse
 			Expect(json.Unmarshal(data, &filesResponse)).ToNot(HaveOccurred())
 
 			entries, err := os.ReadDir(dir)
@@ -126,20 +127,20 @@ var _ = Describe("Gbb", func() {
 		entries := []struct {
 			context         string
 			outcome         string
-			files           []GBBDownloadFile
+			files           []response.GBBDownloadFile
 			errCheck        func(err error)
 			expFilesWritten []int
 		}{
 			{
 				context:  "empty file list",
 				outcome:  "no files written",
-				files:    []GBBDownloadFile{},
+				files:    []response.GBBDownloadFile{},
 				errCheck: func(err error) { Expect(err).ToNot(HaveOccurred()) },
 			},
 			{
 				context: "single file lis - zero entriest",
 				outcome: "one files written",
-				files: []GBBDownloadFile{
+				files: []response.GBBDownloadFile{
 					{
 						Filename: "",
 						Code:     "",
@@ -151,7 +152,7 @@ var _ = Describe("Gbb", func() {
 			{
 				context: "single file list - no directory",
 				outcome: "one files written",
-				files: []GBBDownloadFile{
+				files: []response.GBBDownloadFile{
 					{
 						Filename: "testFile1.js",
 						Code:     "// Hi\n// This is a file.",
@@ -163,7 +164,7 @@ var _ = Describe("Gbb", func() {
 			{
 				context: "single file list - in directory",
 				outcome: "one files written",
-				files: []GBBDownloadFile{
+				files: []response.GBBDownloadFile{
 					{
 						Filename: "foo/testFile1.js",
 						Code:     "// Hi\n// This is a file.",
