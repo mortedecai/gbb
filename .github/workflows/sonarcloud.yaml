@@ -36,12 +36,12 @@ jobs:
             -Dsonar.projectVersion=${{ env.CUR_PROJECT_VERSION }}
             -Dsonar.sourceEncoding=UTF-8
             -Dsonar.sources=.
-            -Dsonar.exclusions=**/*_test.go,**/vendor/**,**/testing/integration/**/*.go
+            -Dsonar.exclusions=**/*_test.go,**/mocks/*.go,**/vendor/**,**/testing/integration/**/*.go,**/*.json
             -Dsonar.tests=.
             -Dsonar.test.exclusions=**/vendor/**
             -Dsonar.test.inclusions=**/*_test.go
             -Dsonar.go.coverage.reportPaths=.reports/coverage.out
-            -Dsonar.go.tests.reportPaths=.reports/unit_test.json
+            -Dsonar.go.tests.reportPaths=.reports/unit_tests.json
 
       - name: Archive Code Reports
         uses: actions/upload-artifact@v3
