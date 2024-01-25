@@ -11,7 +11,7 @@ type CommandOption interface {
 	AddAuth(req *http.Request) *http.Request
 }
 
-//go:generate mockgen -destination=./mocks/mock_root_option.go -package=mocks github.com/mortedecai/gbb/gbb CommandOption
+//go:generate mockgen -destination=./mocks/mock_root_option.go -package=mocks github.com/mortedecai/gbb/client CommandOption
 
 // DownloadOption represents the options available to the Download command.
 type DownloadOption interface {
@@ -19,4 +19,4 @@ type DownloadOption interface {
 	Destination() string
 }
 
-//go:generate mockgen -destination=./mocks/mock_download_option.go -package=mocks github.com/mortedecai/gbb/gbb DownloadOption
+//go:generate mockgen -destination=./mocks/mock_download_option.go -package=mocks github.com/mortedecai/gbb/client DownloadOption

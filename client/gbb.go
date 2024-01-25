@@ -17,7 +17,7 @@ type GBBClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-//go:generate mockgen -destination=./mocks/mock_client.go -package=mocks github.com/mortedecai/client/client GBBClient
+//go:generate mockgen -destination=./mocks/mock_client.go -package=mocks github.com/mortedecai/gbb/client GBBClient
 
 var (
 	Client GBBClient = http.DefaultClient
