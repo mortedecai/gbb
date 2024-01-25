@@ -13,49 +13,16 @@ import (
 	"github.com/mortedecai/gbb/gbberror"
 )
 
-// GoBurnBits is the application interface to split the bulk of processing code out of the main package.
-type GoBurnBits interface {
-	Run([]string) error
-	HandleDownload([]string) error
-}
-
+// GBBClient is an interface to the http.Client methods used for mocking purposes
 type GBBClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
 //go:generate mockgen -destination=./mocks/mock_client.go -package=mocks github.com/mortedecai/gbb/gbb GBBClient
 
-type GBB struct {
-	Host       string
-	AuthToken  string
-	Client     GBBClient
-	WorkingDir string
-}
-
-const (
-	CMD_DOWNLOAD = "download"
+var (
+	Client GBBClient = http.DefaultClient
 )
-
-// New creates a GoBurnBits instance
-func New(host string, token string) *GBB {
-	wd, _ := os.Getwd()
-
-	return &GBB{Host: host, AuthToken: token, Client: http.DefaultClient, WorkingDir: wd}
-}
-
-// Run starts the process of running the command line input
-func (g *GBB) Run(args []string) error {
-	if len(args) < 1 {
-		return gbberror.ErrBadArguments
-	}
-	cmd := args[0]
-	switch cmd {
-	case CMD_DOWNLOAD:
-		return g.HandleDownload(args[1:])
-	default:
-		return gbberror.ErrNotYetImplemented
-	}
-}
 
 type GBBDownloadFilesResponse struct {
 	Success bool                `json:"success"`
@@ -96,10 +63,8 @@ type GBBDownloadFile struct {
 	RamUsage int         `json:"ramUsage,omitempty"`
 }
 
-func (g *GBB) handleServerCall(req *http.Request, expStatus int, responseData any) error {
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", g.AuthToken))
-
-	resp, err := g.Client.Do(req)
+func handleServerCall(req *http.Request, expStatus int, responseData any) error {
+	resp, err := Client.Do(req)
 	if err != nil {
 		return fmt.Errorf(gbberror.StandardWrapper, gbberror.ErrRequestFailed, err)
 	}
@@ -121,52 +86,26 @@ func (g *GBB) handleServerCall(req *http.Request, expStatus int, responseData an
 
 // HandleDownload is responsible for parsing the necessary download arguments and fetching the files from the BitBurner server.
 // If there is an issue with any of the arguments or the download an error will be returned. Nil on success.
-func (g *GBB) HandleDownload(args []string) error {
+func HandleDownload(do DownloadOption) error {
 	fmt.Printf("Starting download...")
-	var outputDir string
-	const (
-		argAuthToken = "--authToken" //#nosec G101 -- This is a false positive
-		argOutputDir = "--outputDir"
-	)
-
-	for i := 0; i < len(args); i++ {
-		switch args[i] {
-		case argAuthToken:
-			i++
-			g.AuthToken = strings.TrimSpace(args[i])
-		case argOutputDir:
-			i++
-			outputDir = strings.TrimSpace(args[i])
-		}
-	}
-	if g.AuthToken == "" {
-		return gbberror.ErrNoAuthToken
-	}
-	if len(outputDir) == 0 {
-		return gbberror.ErrNoOutputDir
-	}
-
-	outputPath := path.Join(g.WorkingDir, path.Clean(outputDir))
-	if !strings.HasPrefix(outputPath, g.WorkingDir) {
-		return fmt.Errorf("%w: %s is outside working directory", gbberror.ErrBadOutputDir, outputPath)
-	}
-
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s", g.Host), bytes.NewBuffer([]byte("{}")))
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d", do.Host(), do.Port()), bytes.NewBuffer([]byte("{}")))
 	if err != nil {
 		return fmt.Errorf(gbberror.StandardWrapper, gbberror.ErrRequestFailed, err)
 	}
+	req = do.AddAuth(req)
+
 	var downloadResults GBBDownloadFilesResponse
-	if err = g.handleServerCall(req, http.StatusOK, &downloadResults); err != nil {
+	if err = handleServerCall(req, http.StatusOK, &downloadResults); err != nil {
 		return err
 	}
 	if !downloadResults.Success {
 		return fmt.Errorf("%w: results file has success == false", gbberror.ErrBitBurnerFailure)
 	}
 
-	return g.WriteFiles(outputPath, downloadResults.Data.Files)
+	return WriteFiles(path.Clean(do.Destination()), downloadResults.Data.Files)
 }
 
-func (g *GBB) WriteFiles(outputDir string, files []GBBDownloadFile) error {
+func WriteFiles(outputDir string, files []GBBDownloadFile) error {
 	failedFiles := make([]string, 0)
 	const failedFileStr = "%s (%s)"
 
@@ -187,7 +126,7 @@ func (g *GBB) WriteFiles(outputDir string, files []GBBDownloadFile) error {
 			failedFiles = append(failedFiles, fmt.Sprintf(failedFileStr, v.Filename, fp))
 			continue
 		}
-		err = g.writeFile(f, v)
+		err = writeFile(f, v)
 		if err != nil {
 			failedFiles = append(failedFiles, fmt.Sprintf(failedFileStr, v.Filename, fp))
 			continue
@@ -205,7 +144,7 @@ func (g *GBB) WriteFiles(outputDir string, files []GBBDownloadFile) error {
 	return nil
 }
 
-func (g *GBB) writeFile(f *os.File, v GBBDownloadFile) error {
+func writeFile(f *os.File, v GBBDownloadFile) error {
 	defer f.Close()
 	totalWritten := 0
 	for attempts := 0; totalWritten < len(v.Code) && attempts < 10; attempts++ {

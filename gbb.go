@@ -1,27 +1,41 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
-	"github.com/mortedecai/gbb/gbb"
+	"github.com/mortedecai/gbb/app"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
 	version string = "<unknown>"
+	logger  *zap.SugaredLogger
 )
 
-func greetings() string {
-	return "Go Burn Bits"
+const (
+	cmdResMsg  = "GBB Result"
+	resMsg     = "Result"
+	errResult  = "Error"
+	detailsMsg = "Details"
+)
+
+func init() {
+	logger = getLogger()
 }
 
-func Version() string {
-	return version
+func getLogger() *zap.SugaredLogger {
+	if l, err := zap.NewProduction(zap.IncreaseLevel(zapcore.ErrorLevel)); err == nil {
+		logger = l.Sugar().Named("gbb")
+	}
+	return logger
 }
 
 func main() {
-	fmt.Printf("%s [%s]\n", greetings(), Version())
-	if err := gbb.New("localhost:9990", "").Run(os.Args[1:]); err != nil {
-		fmt.Printf("Error during execution: %s\n", err.Error())
+	var a *app.App
+	var err error
+
+	a = app.New(version)
+	if err = a.Run(); err != nil {
+		logger.Errorw(cmdResMsg, resMsg, errResult, detailsMsg, err)
 	}
+	logger.Debugw(cmdResMsg, resMsg, "Success")
 }

@@ -18,44 +18,21 @@ import (
 )
 
 var _ = Describe("Gbb", func() {
-	It("should be possible to create a new gbb instance", func() {
-		host := "localhost:9990"
-		token := "abc"
-		g := New(host, token)
-		Expect(g).ToNot(BeNil())
-		Expect(g.Host).To(Equal(host))
-		Expect(g.AuthToken).To(Equal(token))
-	})
-	Describe("Run", func() {
-		var (
-			instance GoBurnBits
-		)
-		const (
-			localhost = "localhost"
-			token     = "abc"
-		)
-		BeforeEach(func() {
-			instance = New(localhost, token)
-		})
-		It("should fail with bad arguments if none given", func() {
-			Expect(instance.Run([]string{})).Should(MatchError(gbberror.ErrBadArguments))
-		})
-	})
 	Describe("Server Calls", func() {
 		req := createGenericRequest()
 		entries := []struct {
 			context          string
 			outcome          string
 			req              *http.Request
-			mockExpectations func(*gomock.Controller, *GBB)
+			mockExpectations func(*gomock.Controller)
 			errChecker       func(error)
 		}{
 			{
 				context: "client call fails",
 				outcome: "A RequestFailed error should be received",
-				mockExpectations: func(gc *gomock.Controller, gbb *GBB) {
+				mockExpectations: func(gc *gomock.Controller) {
 					client := mocks.NewMockGBBClient(gc)
-					gbb.Client = client
+					Client = client
 					client.EXPECT().Do(gomock.AssignableToTypeOf(req)).MaxTimes(1).Return(nil, errors.New("doh"))
 				},
 				errChecker: func(err error) {
@@ -65,9 +42,9 @@ var _ = Describe("Gbb", func() {
 			{
 				context: "response has incorrect status",
 				outcome: "A RequestFailed error should be received",
-				mockExpectations: func(gc *gomock.Controller, gbb *GBB) {
+				mockExpectations: func(gc *gomock.Controller) {
 					client := mocks.NewMockGBBClient(gc)
-					gbb.Client = client
+					Client = client
 					client.EXPECT().Do(gomock.AssignableToTypeOf(req)).MaxTimes(1).Return(createResponse(http.StatusTeapot), nil)
 				},
 				errChecker: func(err error) {
@@ -78,60 +55,26 @@ var _ = Describe("Gbb", func() {
 
 		for _, e := range entries {
 			entry := e
-			instance := New("localhost", "abc")
 			Context(entry.context, func() {
 				It(entry.outcome, func() {
 					mockCtrl := gomock.NewController(GinkgoT())
 					defer mockCtrl.Finish()
-					entry.mockExpectations(mockCtrl, instance)
-					err := instance.handleServerCall(req, http.StatusOK, nil)
+					entry.mockExpectations(mockCtrl)
+					err := handleServerCall(req, http.StatusOK, nil)
 					entry.errChecker(err)
 				})
 			})
 		}
 	})
 
-	Describe("Run", func() {
-		var (
-			instance GoBurnBits
-		)
+	Describe("Download file", func() {
 		const (
 			localhost = "localhost"
 			token     = "abc"
 		)
-		BeforeEach(func() {
-			instance = New(localhost, token)
-		})
-		It("should return an error with insufficient arguments", func() {
-			Expect(instance.Run([]string{})).Should(MatchError(gbberror.ErrBadArguments))
-		})
-	})
-
-	Describe("Download file", func() {
-		var (
-			instance GoBurnBits
-		)
-		const (
-			localhost = "localhost"
-			token     = ""
-		)
-		BeforeEach(func() {
-			instance = New(localhost, token)
-		})
-		It("should fail with an error if no auth token is supplied", func() {
-			Expect(instance.Run([]string{"download"})).Should(MatchError(gbberror.ErrNoAuthToken))
-		})
-		It("should fail if no output direcotry is supplied to download", func() {
-			Expect(instance.Run([]string{"download", "--authToken", "abc"})).Should(MatchError(gbberror.ErrNoOutputDir))
-		})
-		It("should fail if only an empty output dir is supplied", func() {
-			Expect(instance.Run([]string{"download", "--authToken", "abc", "--outputDir", ""})).Should(MatchError(gbberror.ErrNoOutputDir))
-		})
-		It("should fail if output dir is outside of the current directory (eg. ../)", func() {
-			Expect(instance.Run([]string{"download", "--authToken", "abc", "--outputDir", "../jetsons"})).Should(MatchError(gbberror.ErrBadOutputDir))
-		})
 
 		It("should call to the server and handle the response", func() {
+			var req *http.Request
 			wd, err := os.Getwd()
 			Expect(err).ToNot(HaveOccurred())
 			mockCtrl := gomock.NewController(GinkgoT())
@@ -140,12 +83,20 @@ var _ = Describe("Gbb", func() {
 			Expect(err).ToNot(HaveOccurred())
 			defer os.RemoveAll(dir)
 
-			relativeDir := dir[len(wd)+1:]
-
 			client := mocks.NewMockGBBClient(mockCtrl)
-			instance.(*GBB).Client = client
+			opt := mocks.NewMockDownloadOption(mockCtrl)
+			opt.EXPECT().Host().Return(localhost).Times(1)
+			opt.EXPECT().Port().Return(9990).Times(1)
+			opt.EXPECT().Destination().Return(dir).Times(1)
+			opt.EXPECT().AuthToken().Return(token).Times(1)
+			addAuth := opt.EXPECT().AddAuth(gomock.AssignableToTypeOf(req))
+			addAuth.Do(func(r *http.Request) {
+				r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", opt.AuthToken()))
+				addAuth.Return(r)
+			})
+			Client = client
 
-			req, err := http.NewRequest(http.MethodGet, "http://localhost", bytes.NewBuffer([]byte("{}")))
+			req, err = http.NewRequest(http.MethodGet, "http://localhost", bytes.NewBuffer([]byte("{}")))
 			Expect(err).ToNot(HaveOccurred())
 			req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 			data, err := os.ReadFile("testdata/sample_download_files.json")
@@ -155,8 +106,7 @@ var _ = Describe("Gbb", func() {
 			mockResp.Write(data)
 
 			client.EXPECT().Do(gomock.AssignableToTypeOf(req)).MaxTimes(1).Return(mockResp.Result(), nil)
-			args := []string{"download", "--authToken", "abc", "--outputDir", relativeDir}
-			Expect(instance.Run(args)).ToNot(HaveOccurred())
+			Expect(HandleDownload(opt)).ToNot(HaveOccurred())
 
 			var filesResponse GBBDownloadFilesResponse
 			Expect(json.Unmarshal(data, &filesResponse)).ToNot(HaveOccurred())
@@ -172,7 +122,6 @@ var _ = Describe("Gbb", func() {
 			}
 		})
 	})
-
 	Describe("WriteFiles", func() {
 		entries := []struct {
 			context         string
@@ -224,14 +173,13 @@ var _ = Describe("Gbb", func() {
 				errCheck: func(err error) { Expect(err).ToNot(HaveOccurred()) },
 			},
 		}
-		const localhost = "localhost"
 		for _, e := range entries {
 			entry := e
 			outputDir, _ := os.MkdirTemp("", "gbb")
 			Context(entry.context, func() {
 				It(entry.outcome, func() {
-					instance := New(localhost, "")
-					entry.errCheck(instance.WriteFiles(outputDir, entry.files))
+					entry.errCheck(WriteFiles(outputDir, entry.files))
+					defer os.RemoveAll(outputDir)
 
 					for _, idx := range entry.expFilesWritten {
 						path := entry.files[idx].Filename.ToAbsolutePath(outputDir)
