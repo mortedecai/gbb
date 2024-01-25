@@ -3,6 +3,9 @@ name: SonarCloud Manual Trigger
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - v0.**
 
 jobs:
 
