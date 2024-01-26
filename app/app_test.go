@@ -7,6 +7,7 @@ import (
 	"github.com/mortedecai/gbb/client/mocks"
 	"github.com/mortedecai/gbb/response"
 	"go.uber.org/mock/gomock"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"os"
@@ -22,6 +23,7 @@ var _ = Describe("App", func() {
 		originalArgs []string
 		tempDir      string
 		mockClient   *mocks.MockGBBClient
+		logger       *zap.SugaredLogger
 	)
 	const (
 		version = "0.0.0-test"
@@ -37,6 +39,11 @@ var _ = Describe("App", func() {
 		ctrl := gomock.NewController(GinkgoT())
 		mockClient = mocks.NewMockGBBClient(ctrl)
 		client.Client = mockClient
+
+		l, err := zap.NewProduction()
+		Expect(err).ToNot(HaveOccurred())
+		logger = l.Sugar()
+
 	})
 	AfterEach(func() {
 		// Restore os.Args value
@@ -103,7 +110,7 @@ var _ = Describe("App", func() {
 				if entry.addDir {
 					os.Args = append(os.Args, tempDir)
 				}
-				a := app.New(version)
+				a := app.New(version, logger)
 
 				f := func() {
 					if err := a.Run(); err != nil {

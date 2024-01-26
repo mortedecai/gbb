@@ -19,12 +19,12 @@ const (
 )
 
 func init() {
-	logger = getLogger()
+	logger = setupLoggers()
 }
 
-func getLogger() *zap.SugaredLogger {
+func setupLoggers() *zap.SugaredLogger {
 	if l, err := zap.NewProduction(zap.IncreaseLevel(zapcore.ErrorLevel)); err == nil {
-		logger = l.Sugar().Named("client")
+		logger = l.Sugar().Named("gbb")
 	}
 	return logger
 }
@@ -33,7 +33,7 @@ func main() {
 	var a *app.App
 	var err error
 
-	a = app.New(version)
+	a = app.New(version, logger)
 	if err = a.Run(); err != nil {
 		logger.Errorw(cmdResMsg, resMsg, errResult, detailsMsg, err)
 	}

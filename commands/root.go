@@ -25,9 +25,12 @@ import (
 	"fmt"
 	"github.com/mortedecai/gbb/gbberror"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 	"net/http"
 	"strings"
 )
+
+var logger *zap.SugaredLogger
 
 type rootOption struct {
 	host      string
@@ -58,9 +61,9 @@ func (ro *rootOption) AddAuth(req *http.Request) *http.Request {
 
 func Root(version string) (*cobra.Command, error) {
 	rootCmd := &cobra.Command{
-		Use:   "client",
-		Short: "client provides file transfer capabilties for BitBurner",
-		Long: `client is a suite of tools to help in the development of BitBurner scripts locally and
+		Use:   "gbb",
+		Short: "gbb provides file transfer capabilties for BitBurner",
+		Long: `gbb is a suite of tools to help in the development of BitBurner scripts locally and
 transfer them into the BitBurner game via the API Server.
 
 Usage examples to come`,
