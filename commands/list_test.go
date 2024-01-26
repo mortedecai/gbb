@@ -40,4 +40,12 @@ var _ = Describe("Download Option", func() {
 		lo.host = ""
 		Expect(lo.Valid()).To(BeFalse())
 	})
+	It("should be possible to create the list command", func() {
+		rootCmd, rootErr := Root("v0.0.0")
+		Expect(rootCmd).ToNot(BeNil())
+		Expect(rootErr).ToNot(HaveOccurred())
+		listCmd, listErr := List(rootCmd)
+		Expect(listCmd).ToNot(BeNil())
+		Expect(listErr).ToNot(HaveOccurred())
+	})
 })
