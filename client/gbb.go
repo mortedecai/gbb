@@ -29,7 +29,7 @@ type FileWriter interface {
 
 var (
 	Client     GBBClient      = http.DefaultClient
-	createFile fileWriterFunc = func(path string) (FileWriter, error) { return os.Create(path) } //nosec:G304
+	createFile fileWriterFunc = func(path string) (FileWriter, error) { return os.Create(path) } // #nosec G304
 )
 
 func handleServerCall(req *http.Request, expStatus int, responseData any) error {
