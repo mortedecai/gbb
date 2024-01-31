@@ -84,7 +84,7 @@ var _ = Describe("Gbb", func() {
 				errCheck: func(err error) { Expect(err).ToNot(HaveOccurred()) },
 			},
 			{
-				context: "single file lis - zero entriest",
+				context: "single file list - zero entries",
 				outcome: "one files written",
 				files: []response.GBBDownloadFile{
 					{
@@ -155,6 +155,46 @@ var _ = Describe("Gbb", func() {
 			})
 			AfterEach(func() {
 				createFile = origFileCreator
+			})
+			It("should print the list of failed files if a file cannot be created", func() {
+				reader, writer, err := os.Pipe()
+				Expect(err).ToNot(HaveOccurred())
+				stdout := os.Stdout
+				stderr := os.Stderr
+				defer func() {
+					os.Stdout = stdout
+					os.Stderr = stderr
+				}()
+
+				os.Stdout = writer
+				os.Stderr = writer
+
+				out := make(chan string)
+				wg := new(sync.WaitGroup)
+				wg.Add(1)
+
+				files := []response.GBBDownloadFile{{Filename: "BadFile.js"}}
+
+				mfc.w = nil
+				mfc.err = errors.New("doh")
+
+				// Call method
+				err = WriteFiles("non-existent-dir/", files)
+				Expect(err).To(HaveOccurred())
+
+				go func() {
+					var buf bytes.Buffer
+					wg.Done()
+					io.Copy(&buf, reader)
+					out <- buf.String()
+				}()
+
+				wg.Wait()
+				writer.Close()
+
+				str := strings.TrimSpace(<-out)
+				Expect(str).To(ContainSubstring("Failed to write 1 files:\n"))
+				Expect(str).To(ContainSubstring("1) BadFile.js (non-existent-dir/BadFile.js)"))
 			})
 			It("should print the list of failed files if a file fails to write", func() {
 				reader, writer, err := os.Pipe()
