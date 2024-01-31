@@ -18,8 +18,18 @@ type GBBClient interface {
 
 //go:generate mockgen -destination=./mocks/mock_client.go -package=mocks github.com/mortedecai/gbb/client GBBClient
 
+type fileWriterFunc func(path string) (FileWriter, error)
+
+type FileWriter interface {
+	WriteString(data string) (n int, err error)
+	Close() error
+}
+
+//go:generate mockgen -destination=./mocks/file_writer.go -package=mocks github.com/mortedecai/gbb/client FileWriter
+
 var (
-	Client GBBClient = http.DefaultClient
+	Client     GBBClient      = http.DefaultClient
+	createFile fileWriterFunc = func(path string) (FileWriter, error) { return os.Create(path) }
 )
 
 func handleServerCall(req *http.Request, expStatus int, responseData any) error {
@@ -59,7 +69,8 @@ func WriteFiles(outputDir string, files []response.GBBDownloadFile) error {
 				continue
 			}
 		}
-		f, err := os.Create(path.Clean(fp))
+		//f, err := os.Create(path.Clean(fp))
+		f, err := createFile(path.Clean(fp))
 		if err != nil {
 			failedFiles = append(failedFiles, fmt.Sprintf(failedFileStr, v.Filename, fp))
 			continue
@@ -82,7 +93,7 @@ func WriteFiles(outputDir string, files []response.GBBDownloadFile) error {
 	return nil
 }
 
-func writeFile(f *os.File, v response.GBBDownloadFile) error {
+func writeFile(f FileWriter, v response.GBBDownloadFile) error {
 	defer f.Close()
 	totalWritten := 0
 	for attempts := 0; totalWritten < len(v.Code) && attempts < 10; attempts++ {

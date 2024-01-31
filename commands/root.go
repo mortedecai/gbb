@@ -25,12 +25,9 @@ import (
 	"fmt"
 	"github.com/mortedecai/gbb/gbberror"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 	"net/http"
 	"strings"
 )
-
-var logger *zap.SugaredLogger
 
 type rootOption struct {
 	host      string

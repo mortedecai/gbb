@@ -111,8 +111,6 @@ var _ = Describe("Command Integration Test", func() {
 						if entry.addDir {
 							os.Args = append(os.Args, tempDir)
 						}
-						/*app, err := app.New(version)
-						Expect(err).ToNot(HaveOccurred())*/
 						rootCmd, err := Root(version)
 						Expect(err).ToNot(HaveOccurred())
 						_, err = Download(rootCmd)

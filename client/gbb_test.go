@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"github.com/mortedecai/gbb/response"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
+	"sync"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -137,8 +140,80 @@ var _ = Describe("Gbb", func() {
 				})
 			})
 		}
+		Describe("error cases", func() {
+			var (
+				origFileCreator fileWriterFunc
+				mfc             *mockFileCreator
+				ctrl            *gomock.Controller
+			)
+			BeforeEach(func() {
+				ctrl = gomock.NewController(GinkgoT())
+				fw := mocks.NewMockFileWriter(ctrl)
+				mfc = &mockFileCreator{w: fw}
+				origFileCreator = createFile
+				createFile = mfc.createFile
+			})
+			AfterEach(func() {
+				createFile = origFileCreator
+			})
+			It("should print the list of failed files if a file fails to write", func() {
+				reader, writer, err := os.Pipe()
+				Expect(err).ToNot(HaveOccurred())
+				stdout := os.Stdout
+				stderr := os.Stderr
+				defer func() {
+					os.Stdout = stdout
+					os.Stderr = stderr
+				}()
+
+				os.Stdout = writer
+				os.Stderr = writer
+
+				out := make(chan string)
+				wg := new(sync.WaitGroup)
+				wg.Add(1)
+
+				files := []response.GBBDownloadFile{
+					{
+						Filename: "BadFile.js",
+						Code:     "1234.... Nicky Nicky Nine Door",
+						RamUsage: 0,
+					},
+				}
+
+				mfc.w.EXPECT().WriteString(files[0].Code).Return(5, errors.New("doh")).Times(1)
+				mfc.w.EXPECT().Close().Times(1)
+
+				// Call method
+				err = WriteFiles("non-existent-dir/", files)
+				Expect(err).To(HaveOccurred())
+
+				go func() {
+					var buf bytes.Buffer
+					wg.Done()
+					io.Copy(&buf, reader)
+					out <- buf.String()
+				}()
+
+				wg.Wait()
+				writer.Close()
+
+				str := strings.TrimSpace(<-out)
+				Expect(str).To(ContainSubstring("Failed to write 1 files:\n"))
+				Expect(str).To(ContainSubstring("1) BadFile.js (non-existent-dir/BadFile.js)"))
+			})
+		})
 	})
 })
+
+type mockFileCreator struct {
+	w   *mocks.MockFileWriter
+	err error
+}
+
+func (mfc *mockFileCreator) createFile(path string) (FileWriter, error) {
+	return mfc.w, mfc.err
+}
 
 func createGenericRequest() *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost", bytes.NewBuffer([]byte("{}")))
