@@ -1,19 +1,21 @@
-package gbb
+package client
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/mortedecai/gbb/response"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
+	"sync"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
 
-	"github.com/mortedecai/gbb/gbb/mocks"
+	"github.com/mortedecai/gbb/client/mocks"
 	"github.com/mortedecai/gbb/gbberror"
 )
 
@@ -67,79 +69,24 @@ var _ = Describe("Gbb", func() {
 		}
 	})
 
-	Describe("Download file", func() {
-		const (
-			localhost = "localhost"
-			token     = "abc"
-		)
-
-		It("should call to the server and handle the response", func() {
-			var req *http.Request
-			wd, err := os.Getwd()
-			Expect(err).ToNot(HaveOccurred())
-			mockCtrl := gomock.NewController(GinkgoT())
-			defer mockCtrl.Finish()
-			dir, err := os.MkdirTemp(wd, "gbb")
-			Expect(err).ToNot(HaveOccurred())
-			defer os.RemoveAll(dir)
-
-			client := mocks.NewMockGBBClient(mockCtrl)
-			opt := mocks.NewMockDownloadOption(mockCtrl)
-			opt.EXPECT().Host().Return(localhost).Times(1)
-			opt.EXPECT().Port().Return(9990).Times(1)
-			opt.EXPECT().Destination().Return(dir).Times(1)
-			opt.EXPECT().AuthToken().Return(token).Times(1)
-			addAuth := opt.EXPECT().AddAuth(gomock.AssignableToTypeOf(req))
-			addAuth.Do(func(r *http.Request) {
-				r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", opt.AuthToken()))
-				addAuth.Return(r)
-			})
-			Client = client
-
-			req, err = http.NewRequest(http.MethodGet, "http://localhost", bytes.NewBuffer([]byte("{}")))
-			Expect(err).ToNot(HaveOccurred())
-			req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-			data, err := os.ReadFile("testdata/sample_download_files.json")
-			Expect(err).ToNot(HaveOccurred())
-			mockResp := httptest.NewRecorder()
-			mockResp.WriteHeader(http.StatusOK)
-			mockResp.Write(data)
-
-			client.EXPECT().Do(gomock.AssignableToTypeOf(req)).MaxTimes(1).Return(mockResp.Result(), nil)
-			Expect(HandleDownload(opt)).ToNot(HaveOccurred())
-
-			var filesResponse GBBDownloadFilesResponse
-			Expect(json.Unmarshal(data, &filesResponse)).ToNot(HaveOccurred())
-
-			entries, err := os.ReadDir(dir)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(len(entries)).To(Equal(len(filesResponse.Data.Files)))
-
-			for _, v := range filesResponse.Data.Files {
-				writtenData, err := os.ReadFile(v.Filename.ToAbsolutePath(dir))
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(writtenData)).To(Equal(v.Code))
-			}
-		})
-	})
 	Describe("WriteFiles", func() {
 		entries := []struct {
 			context         string
 			outcome         string
-			files           []GBBDownloadFile
+			files           []response.GBBDownloadFile
 			errCheck        func(err error)
 			expFilesWritten []int
 		}{
 			{
 				context:  "empty file list",
 				outcome:  "no files written",
-				files:    []GBBDownloadFile{},
+				files:    []response.GBBDownloadFile{},
 				errCheck: func(err error) { Expect(err).ToNot(HaveOccurred()) },
 			},
 			{
-				context: "single file lis - zero entriest",
+				context: "single file list - zero entries",
 				outcome: "one files written",
-				files: []GBBDownloadFile{
+				files: []response.GBBDownloadFile{
 					{
 						Filename: "",
 						Code:     "",
@@ -151,7 +98,7 @@ var _ = Describe("Gbb", func() {
 			{
 				context: "single file list - no directory",
 				outcome: "one files written",
-				files: []GBBDownloadFile{
+				files: []response.GBBDownloadFile{
 					{
 						Filename: "testFile1.js",
 						Code:     "// Hi\n// This is a file.",
@@ -163,7 +110,7 @@ var _ = Describe("Gbb", func() {
 			{
 				context: "single file list - in directory",
 				outcome: "one files written",
-				files: []GBBDownloadFile{
+				files: []response.GBBDownloadFile{
 					{
 						Filename: "foo/testFile1.js",
 						Code:     "// Hi\n// This is a file.",
@@ -175,7 +122,7 @@ var _ = Describe("Gbb", func() {
 		}
 		for _, e := range entries {
 			entry := e
-			outputDir, _ := os.MkdirTemp("", "gbb")
+			outputDir, _ := os.MkdirTemp("", "client")
 			Context(entry.context, func() {
 				It(entry.outcome, func() {
 					entry.errCheck(WriteFiles(outputDir, entry.files))
@@ -193,8 +140,120 @@ var _ = Describe("Gbb", func() {
 				})
 			})
 		}
+		Describe("error cases", func() {
+			var (
+				origFileCreator fileWriterFunc
+				mfc             *mockFileCreator
+				ctrl            *gomock.Controller
+			)
+			BeforeEach(func() {
+				ctrl = gomock.NewController(GinkgoT())
+				fw := mocks.NewMockFileWriter(ctrl)
+				mfc = &mockFileCreator{w: fw}
+				origFileCreator = createFile
+				createFile = mfc.createFile
+			})
+			AfterEach(func() {
+				createFile = origFileCreator
+			})
+			It("should print the list of failed files if a file cannot be created", func() {
+				reader, writer, err := os.Pipe()
+				Expect(err).ToNot(HaveOccurred())
+				stdout := os.Stdout
+				stderr := os.Stderr
+				defer func() {
+					os.Stdout = stdout
+					os.Stderr = stderr
+				}()
+
+				os.Stdout = writer
+				os.Stderr = writer
+
+				out := make(chan string)
+				wg := new(sync.WaitGroup)
+				wg.Add(1)
+
+				files := []response.GBBDownloadFile{{Filename: "BadFile.js"}}
+
+				mfc.w = nil
+				mfc.err = errors.New("doh")
+
+				// Call method
+				err = WriteFiles("non-existent-dir/", files)
+				Expect(err).To(HaveOccurred())
+
+				go func() {
+					var buf bytes.Buffer
+					wg.Done()
+					io.Copy(&buf, reader)
+					out <- buf.String()
+				}()
+
+				wg.Wait()
+				writer.Close()
+
+				str := strings.TrimSpace(<-out)
+				Expect(str).To(ContainSubstring("Failed to write 1 files:\n"))
+				Expect(str).To(ContainSubstring("1) BadFile.js (non-existent-dir/BadFile.js)"))
+			})
+			It("should print the list of failed files if a file fails to write", func() {
+				reader, writer, err := os.Pipe()
+				Expect(err).ToNot(HaveOccurred())
+				stdout := os.Stdout
+				stderr := os.Stderr
+				defer func() {
+					os.Stdout = stdout
+					os.Stderr = stderr
+				}()
+
+				os.Stdout = writer
+				os.Stderr = writer
+
+				out := make(chan string)
+				wg := new(sync.WaitGroup)
+				wg.Add(1)
+
+				files := []response.GBBDownloadFile{
+					{
+						Filename: "BadFile.js",
+						Code:     "1234.... Nicky Nicky Nine Door",
+						RamUsage: 0,
+					},
+				}
+
+				mfc.w.EXPECT().WriteString(files[0].Code).Return(5, errors.New("doh")).Times(1)
+				mfc.w.EXPECT().Close().Times(1)
+
+				// Call method
+				err = WriteFiles("non-existent-dir/", files)
+				Expect(err).To(HaveOccurred())
+
+				go func() {
+					var buf bytes.Buffer
+					wg.Done()
+					io.Copy(&buf, reader)
+					out <- buf.String()
+				}()
+
+				wg.Wait()
+				writer.Close()
+
+				str := strings.TrimSpace(<-out)
+				Expect(str).To(ContainSubstring("Failed to write 1 files:\n"))
+				Expect(str).To(ContainSubstring("1) BadFile.js (non-existent-dir/BadFile.js)"))
+			})
+		})
 	})
 })
+
+type mockFileCreator struct {
+	w   *mocks.MockFileWriter
+	err error
+}
+
+func (mfc *mockFileCreator) createFile(path string) (FileWriter, error) {
+	return mfc.w, mfc.err
+}
 
 func createGenericRequest() *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost", bytes.NewBuffer([]byte("{}")))

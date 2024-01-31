@@ -51,11 +51,11 @@ The output directory _*MUST*_ be a sub-directory of where `gbb` is being run fro
 WARN: All existing files in `outputDir` will be overwritten without confirmation.
 
 ```shell
-gbb download --authToken <BitBurner auth token> --outputDir <output directory>
+client download --authToken <BitBurner auth token> --outputDir <output directory>
 ```
 
 For example, to download them to `/var/bb`, with an auth token `abc`:
 
 ```shell
-gbb download --authToken abc --outputDir /var/bb
+client download --authToken abc --outputDir /var/bb
 ```

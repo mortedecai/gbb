@@ -15,7 +15,7 @@ type Flagger interface {
 	GetInt(*cobra.Command, string) (int, error)
 }
 
-//go:generate mockgen -destination=./mocks/mock_flagger.go -package=mocks github.com/mortedecai/gbb/gbb/commands Flagger
+//go:generate mockgen -destination=./mocks/mock_flagger.go -package=mocks github.com/mortedecai/gbb/commands Flagger
 
 type flagger struct{}
 

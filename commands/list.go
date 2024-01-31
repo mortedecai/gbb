@@ -23,54 +23,41 @@ package commands
 
 import (
 	"fmt"
-	"github.com/mortedecai/gbb/gbb"
 
 	"github.com/spf13/cobra"
+
+	"github.com/mortedecai/gbb/client"
 )
 
-type downloadOption struct {
+type listOption struct {
 	*rootOption
-	destination string
 }
 
-func (do *downloadOption) Destination() string {
-	return do.destination
+func (lo *listOption) Valid() bool {
+	return lo.rootOption.Valid()
 }
 
-func (do *downloadOption) Valid() bool {
-	return do.destination != "" && do.rootOption.Valid()
-}
-
-func Download(rootCmd *cobra.Command) (*cobra.Command, error) {
+func List(rootCmd *cobra.Command) (*cobra.Command, error) {
 
 	// downloadCmd represents the download command
-	var downloadCmd = &cobra.Command{
-		Use:   "download",
-		Short: "Allows the user to download files from BitBurner",
-		Long:  `The download command allows users to retrieve files from inside the Bit Burner game via the Remote API Server.`,
-		//	Args:  cobra.MinimumNArgs(1),
-		RunE: handleDownload,
+	var listCmd = &cobra.Command{
+		Use:   "list",
+		Short: "Allows the user to list the files in BitBurner",
+		Long:  `The list command allows users to list files and locations from inside the Bit Burner game via the Remote API Server.`,
+		RunE:  handleList,
 	}
-	downloadCmd.Flags().StringP("destination", "d", "./", "The base directory to download files into (Default: './').")
-	rootCmd.AddCommand(downloadCmd)
-	if err := downloadCmd.MarkFlagDirname("destination"); err != nil {
-		return nil, err
-	}
-	return downloadCmd, downloadCmd.MarkFlagRequired("destination")
+	rootCmd.AddCommand(listCmd)
+	return listCmd, nil
 }
 
-func handleDownload(cmd *cobra.Command, args []string) error {
-	opt := &downloadOption{rootOption: &rootOption{}}
+func handleList(cmd *cobra.Command, args []string) error {
+	opt := &listOption{rootOption: &rootOption{}}
 	var err error
 	opt.host, opt.port, opt.authToken, err = handleCommonFlags(cmd)
 	if err != nil {
 		return err
 	}
-	opt.destination, err = flagReader.GetString(cmd, "destination")
-	if err != nil {
-		return err
-	}
 
-	fmt.Printf("Downloading from http://%s:%d with token len %d to %s\n", opt.host, opt.port, len(opt.authToken), opt.destination)
-	return gbb.HandleDownload(opt)
+	fmt.Printf("Listing files from http://%s:%d with token len %d\n", opt.host, opt.port, len(opt.authToken))
+	return client.HandleList(opt)
 }

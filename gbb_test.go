@@ -35,7 +35,7 @@ var _ = Describe("Go Burn Bits", func() {
 			logger = originalLogger
 		})
 		It("should print 'Go Burn Bits'", func() {
-			os.Args = []string{"gbb", "-v"}
+			os.Args = []string{"client", "-v"}
 			reader, writer, err := os.Pipe()
 			Expect(err).ToNot(HaveOccurred())
 
@@ -72,7 +72,7 @@ var _ = Describe("Go Burn Bits", func() {
 		})
 		// Note: This test is done differently as we are checking the zap logs as opposed to std out / std err
 		It("should log an error", func() {
-			os.Args = []string{"gbb", "hoooah"}
+			os.Args = []string{"client", "hoooah"}
 			main()
 			entry := logs.All()[0]
 			fmt.Printf("entry: %v\ncontext map: %v\n", entry, entry.ContextMap())
