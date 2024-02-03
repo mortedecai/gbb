@@ -94,6 +94,20 @@ func (mr *MockCommandOptionMockRecorder) Port() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Port", reflect.TypeOf((*MockCommandOption)(nil).Port))
 }
 
+// Server mocks base method.
+func (m *MockCommandOption) Server() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Server")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Server indicates an expected call of Server.
+func (mr *MockCommandOptionMockRecorder) Server() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Server", reflect.TypeOf((*MockCommandOption)(nil).Server))
+}
+
 // Valid mocks base method.
 func (m *MockCommandOption) Valid() bool {
 	m.ctrl.T.Helper()

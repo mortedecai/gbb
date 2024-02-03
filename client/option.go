@@ -8,6 +8,7 @@ type CommandOption interface {
 	Host() string
 	Port() int
 	Valid() bool
+	Server() string
 	AddAuth(req *http.Request) *http.Request
 }
 
@@ -25,3 +26,5 @@ type UploadOption interface {
 	CommandOption
 	ToUpload() []string
 }
+
+//go:generate mockgen -destination=./mocks/mock_upload_option.go -package=mocks github.com/mortedecai/gbb/client UploadOption
