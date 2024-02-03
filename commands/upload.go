@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"github.com/mortedecai/gbb/gbberror"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +18,21 @@ func Upload(rootCmd *cobra.Command) (*cobra.Command, error) {
 	return uploadCmd, uploadCmd.MarkFlagRequired("file")
 }
 
+type uploadOption struct {
+	*rootOption
+	toUpload string
+}
+
 func handleUpload(cmd *cobra.Command, args []string) error {
+	var err error
+	opt := &uploadOption{rootOption: &rootOption{}}
+	if opt.host, opt.port, opt.authToken, err = handleCommonFlags(cmd); err != nil {
+		return err
+	}
+	if opt.toUpload, err = flagReader.GetString(cmd, "file"); err != nil {
+		return err
+	}
+
+	fmt.Printf("\nUploading %s to http://%s:%d with token len %d.\n", opt.toUpload, opt.host, opt.port, len(opt.authToken))
 	return gbberror.ErrNotYetImplemented
 }
