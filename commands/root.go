@@ -56,6 +56,10 @@ func (ro *rootOption) AddAuth(req *http.Request) *http.Request {
 	return req
 }
 
+func (ro *rootOption) Server() string {
+	return fmt.Sprintf("http://%s:%d", ro.host, ro.port)
+}
+
 func Root(version string) (*cobra.Command, error) {
 	rootCmd := &cobra.Command{
 		Use:   "gbb",
