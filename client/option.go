@@ -20,3 +20,8 @@ type DownloadOption interface {
 }
 
 //go:generate mockgen -destination=./mocks/mock_download_option.go -package=mocks github.com/mortedecai/gbb/client DownloadOption
+
+type UploadOption interface {
+	CommandOption
+	ToUpload() []string
+}

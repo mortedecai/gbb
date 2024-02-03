@@ -2,8 +2,9 @@ package commands
 
 import (
 	"fmt"
-	"github.com/mortedecai/gbb/gbberror"
+	"github.com/mortedecai/gbb/client"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 func Upload(rootCmd *cobra.Command) (*cobra.Command, error) {
@@ -23,6 +24,18 @@ type uploadOption struct {
 	toUpload string
 }
 
+func (opt *uploadOption) ToUpload() []string {
+	var uploads []string
+	if strings.TrimSpace(opt.toUpload) != "" {
+		uploads = []string{opt.toUpload}
+	}
+	return uploads
+}
+
+func (opt *uploadOption) Valid() bool {
+	return len(opt.ToUpload()) > 0 && opt.rootOption.Valid()
+}
+
 func handleUpload(cmd *cobra.Command, args []string) error {
 	var err error
 	opt := &uploadOption{rootOption: &rootOption{}}
@@ -34,5 +47,5 @@ func handleUpload(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("\nUploading %s to http://%s:%d with token len %d.\n", opt.toUpload, opt.host, opt.port, len(opt.authToken))
-	return gbberror.ErrNotYetImplemented
+	return client.HandleUpload(opt)
 }
