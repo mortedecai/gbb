@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mortedecai/gbb/gbberror"
-	"github.com/mortedecai/gbb/response"
+	"github.com/mortedecai/gbb/models"
 	"io"
 	"net/http"
 	"os"
@@ -53,7 +53,7 @@ func handleServerCall(req *http.Request, expStatus int, responseData any) error 
 	return nil
 }
 
-func WriteFiles(outputDir string, files []response.GBBDownloadFile) error {
+func WriteFiles(outputDir string, files []models.GBBFileData) error {
 	failedFiles := make([]string, 0)
 	const failedFileStr = "%s (%s)"
 
@@ -93,7 +93,7 @@ func WriteFiles(outputDir string, files []response.GBBDownloadFile) error {
 	return nil
 }
 
-func writeFile(f FileWriter, v response.GBBDownloadFile) error {
+func writeFile(f FileWriter, v models.GBBFileData) error {
 	defer f.Close()
 	totalWritten := 0
 	for attempts := 0; totalWritten < len(v.Code) && attempts < 10; attempts++ {

@@ -7,6 +7,7 @@ import (
 	"github.com/mortedecai/gbb/client"
 	"github.com/mortedecai/gbb/client/mocks"
 	"github.com/mortedecai/gbb/gbberror"
+	"github.com/mortedecai/gbb/models"
 	"github.com/mortedecai/gbb/response"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -243,7 +244,7 @@ func createEmptyDownloadResponse() *http.Response {
 	basicResponse := response.GBBDownloadFilesResponse{
 		Success: true,
 		Data: response.GBBFileDownloadData{
-			Files: make([]response.GBBDownloadFile, 0),
+			Files: make([]models.GBBFileData, 0),
 		},
 	}
 	data, err := json.Marshal(basicResponse)
