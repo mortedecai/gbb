@@ -46,8 +46,7 @@ func validateFiles(fns []models.GBBFileName) bool {
 		return false
 	}
 	for _, v := range fns {
-		v.IsValid()
-		if !validateFileForUpload(v.String()) {
+		if !v.IsValid() || !validateFileForUpload(v.String()) {
 			return false
 		}
 	}
