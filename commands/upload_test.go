@@ -31,8 +31,18 @@ var _ = Describe("Upload Option", func() {
 		Expect(opt.Valid()).To(BeFalse())
 	})
 	It("should become valid if there is a file to upload", func() {
-		opt.toUpload = "./foo.js"
+		opt.toUpload = "./root.go"
 		Expect(opt.ToUpload()).ToNot(BeEmpty())
 		Expect(opt.Valid()).To(BeTrue())
+	})
+	It("should become valid if the file is a directory", func() {
+		opt.toUpload = "./mocks"
+		Expect(opt.ToUpload()).ToNot(BeEmpty())
+		Expect(opt.Valid()).To(BeFalse())
+	})
+	It("should become valid if the file doesn't exist", func() {
+		opt.toUpload = "./does-not-exist.go"
+		Expect(opt.ToUpload()).ToNot(BeEmpty())
+		Expect(opt.Valid()).To(BeFalse())
 	})
 })

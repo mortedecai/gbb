@@ -2,9 +2,13 @@ package commands
 
 import (
 	"fmt"
-	"github.com/mortedecai/gbb/client"
-	"github.com/spf13/cobra"
+	"os"
+	"path"
 	"strings"
+
+	"github.com/spf13/cobra"
+
+	"github.com/mortedecai/gbb/client"
 )
 
 func Upload(rootCmd *cobra.Command) (*cobra.Command, error) {
@@ -33,7 +37,27 @@ func (opt *uploadOption) ToUpload() []string {
 }
 
 func (opt *uploadOption) Valid() bool {
-	return len(opt.ToUpload()) > 0 && opt.rootOption.Valid()
+	return validateFiles(opt.ToUpload()) && opt.rootOption.Valid()
+}
+
+func validateFiles(fns []string) bool {
+	if len(fns) <= 0 {
+		return false
+	}
+	for _, v := range fns {
+		if !validateFile(v) {
+			return false
+		}
+	}
+	return true
+}
+
+func validateFile(fn string) bool {
+	p := path.Clean(fn)
+	if fi, err := os.Stat(p); err != nil || fi.IsDir() {
+		return false
+	}
+	return true
 }
 
 func handleUpload(cmd *cobra.Command, args []string) error {
