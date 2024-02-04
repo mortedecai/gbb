@@ -12,6 +12,7 @@ import (
 	http "net/http"
 	reflect "reflect"
 
+	models "github.com/mortedecai/gbb/models"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -109,10 +110,10 @@ func (mr *MockUploadOptionMockRecorder) Server() *gomock.Call {
 }
 
 // ToUpload mocks base method.
-func (m *MockUploadOption) ToUpload() []string {
+func (m *MockUploadOption) ToUpload() []models.GBBFileName {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ToUpload")
-	ret0, _ := ret[0].([]string)
+	ret0, _ := ret[0].([]models.GBBFileName)
 	return ret0
 }
 

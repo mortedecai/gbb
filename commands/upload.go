@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"github.com/mortedecai/gbb/models"
 	"os"
 	"path"
 	"strings"
@@ -28,10 +29,10 @@ type uploadOption struct {
 	toUpload string
 }
 
-func (opt *uploadOption) ToUpload() []string {
-	var uploads []string
+func (opt *uploadOption) ToUpload() []models.GBBFileName {
+	var uploads []models.GBBFileName
 	if strings.TrimSpace(opt.toUpload) != "" {
-		uploads = []string{opt.toUpload}
+		uploads = []models.GBBFileName{models.GBBFileName(opt.toUpload)}
 	}
 	return uploads
 }
@@ -40,19 +41,20 @@ func (opt *uploadOption) Valid() bool {
 	return validateFiles(opt.ToUpload()) && opt.rootOption.Valid()
 }
 
-func validateFiles(fns []string) bool {
+func validateFiles(fns []models.GBBFileName) bool {
 	if len(fns) <= 0 {
 		return false
 	}
 	for _, v := range fns {
-		if !validateFile(v) {
+		v.IsValid()
+		if !validateFileForUpload(v.String()) {
 			return false
 		}
 	}
 	return true
 }
 
-func validateFile(fn string) bool {
+func validateFileForUpload(fn string) bool {
 	p := path.Clean(fn)
 	if fi, err := os.Stat(p); err != nil || fi.IsDir() {
 		return false
