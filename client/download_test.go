@@ -63,7 +63,7 @@ var _ = Describe("Download file", func() {
 		Expect(len(entries)).To(Equal(len(filesResponse.Data.Files)))
 
 		for _, v := range filesResponse.Data.Files {
-			writtenData, err := os.ReadFile(v.Filename.ToAbsolutePath(dir))
+			writtenData, err := os.ReadFile(v.Filename.Path(dir))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(string(writtenData)).To(Equal(v.Code))
 		}

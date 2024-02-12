@@ -90,21 +90,21 @@ var _ = Describe("Command Integration Test", func() {
 			//
 			{
 				context:      "no port",
-				outcome:      "should error due to port not yet implemented",
+				outcome:      "should not error as port is not required.",
 				args:         []string{"gbb", "upload", "-H", localhost, "-f", localfile, "-a", authToken},
 				errorMatcher: func(err error) { Expect(err).ToNot(HaveOccurred()) },
 				callTimes:    1,
 			},
 			{
 				context:      "no host",
-				outcome:      "should error due to not yet implemented",
+				outcome:      "should not error as host is not required",
 				args:         []string{"gbb", "upload", "-p", localport, "-f", localfile, "-a", authToken},
 				errorMatcher: func(err error) { Expect(err).ToNot(HaveOccurred()) },
 				callTimes:    1,
 			},
 			{
 				context:      "all present",
-				outcome:      "should have error 'not yet implemented'",
+				outcome:      "should not error with everything provided",
 				args:         []string{"gbb", "upload", "-H", localhost, "-p", localport, "-f", localfile, "-a", authToken},
 				errorMatcher: func(err error) { Expect(err).ToNot(HaveOccurred()) },
 				callTimes:    1,
@@ -115,7 +115,7 @@ var _ = Describe("Command Integration Test", func() {
 			Context(entry.context, func() {
 				It(entry.outcome, func() {
 					var req *http.Request
-					response := createEmptyDownloadResponse()
+					response := createSuccessfulUploadResponse()
 
 					os.Args = entry.args
 					rootCmd, err := Root(version)

@@ -129,7 +129,7 @@ var _ = Describe("Gbb", func() {
 					defer os.RemoveAll(outputDir)
 
 					for _, idx := range entry.expFilesWritten {
-						path := entry.files[idx].Filename.ToAbsolutePath(outputDir)
+						path := entry.files[idx].Filename.Path(outputDir)
 						fi, err := os.Stat(path)
 						Expect(err).ToNot(HaveOccurred())
 						Expect(fi.IsDir()).To(BeFalse())

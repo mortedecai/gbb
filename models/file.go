@@ -13,19 +13,19 @@ func (gfn GBBFileName) IsValid() bool {
 }
 
 func (gfn GBBFileName) HasDir() bool {
-	return strings.Contains(gfn.String(), "/")
+	return strings.LastIndex(gfn.String(), "/") > 0
 }
 
 func (gfn GBBFileName) String() string {
 	return string(gfn)
 }
 
-func (gfn GBBFileName) ToAbsolutePath(outputDir string) string {
+func (gfn GBBFileName) Path(outputDir string) string {
 	return path.Join(outputDir, path.Clean(gfn.String()))
 }
 
 func (gfn GBBFileName) CreatePath(outputDir string) error {
-	absPath := gfn.ToAbsolutePath(outputDir)
+	absPath := gfn.Path(outputDir)
 	dirList := path.Dir(absPath)
 	return os.MkdirAll(dirList, 0750)
 }

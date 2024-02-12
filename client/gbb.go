@@ -61,7 +61,7 @@ func WriteFiles(outputDir string, files []models.GBBFileData) error {
 		if !v.Filename.IsValid() {
 			continue
 		}
-		fp := v.Filename.ToAbsolutePath(outputDir)
+		fp := v.Filename.Path(outputDir)
 
 		if v.Filename.HasDir() {
 			if err := v.Filename.CreatePath(outputDir); err != nil {
