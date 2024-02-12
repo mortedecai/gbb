@@ -6,7 +6,6 @@ import (
 	"errors"
 	"github.com/mortedecai/gbb/client"
 	"github.com/mortedecai/gbb/client/mocks"
-	"github.com/mortedecai/gbb/gbberror"
 	"github.com/mortedecai/gbb/models"
 	"github.com/mortedecai/gbb/response"
 	. "github.com/onsi/ginkgo/v2"
@@ -93,22 +92,22 @@ var _ = Describe("Command Integration Test", func() {
 				context:      "no port",
 				outcome:      "should error due to port not yet implemented",
 				args:         []string{"gbb", "upload", "-H", localhost, "-f", localfile, "-a", authToken},
-				errorMatcher: func(err error) { Expect(err).To(MatchError(gbberror.ErrNotYetImplemented)) },
-				callTimes:    0,
+				errorMatcher: func(err error) { Expect(err).ToNot(HaveOccurred()) },
+				callTimes:    1,
 			},
 			{
 				context:      "no host",
 				outcome:      "should error due to not yet implemented",
 				args:         []string{"gbb", "upload", "-p", localport, "-f", localfile, "-a", authToken},
-				errorMatcher: func(err error) { Expect(err).To(MatchError(gbberror.ErrNotYetImplemented)) },
-				callTimes:    0,
+				errorMatcher: func(err error) { Expect(err).ToNot(HaveOccurred()) },
+				callTimes:    1,
 			},
 			{
 				context:      "all present",
 				outcome:      "should have error 'not yet implemented'",
 				args:         []string{"gbb", "upload", "-H", localhost, "-p", localport, "-f", localfile, "-a", authToken},
-				errorMatcher: func(err error) { Expect(err).To(MatchError(gbberror.ErrNotYetImplemented)) },
-				callTimes:    0,
+				errorMatcher: func(err error) { Expect(err).ToNot(HaveOccurred()) },
+				callTimes:    1,
 			},
 		}
 		for _, v := range entries {
@@ -240,6 +239,18 @@ var _ = Describe("Command Integration Test", func() {
 	})
 })
 
+func createSuccessfulUploadResponse() *http.Response {
+	basicResponse := response.GBBUploadFileResponse{Success: true}
+	data, err := json.Marshal(basicResponse)
+	Expect(err).ToNot(HaveOccurred())
+	resp := &http.Response{
+		Body:       io.NopCloser(bytes.NewReader(data)),
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": []string{"application/json"}},
+	}
+	return resp
+}
+
 func createEmptyDownloadResponse() *http.Response {
 	basicResponse := response.GBBDownloadFilesResponse{
 		Success: true,
@@ -249,10 +260,10 @@ func createEmptyDownloadResponse() *http.Response {
 	}
 	data, err := json.Marshal(basicResponse)
 	Expect(err).ToNot(HaveOccurred())
-	response := &http.Response{
+	resp := &http.Response{
 		Body:       io.NopCloser(bytes.NewReader(data)),
 		StatusCode: http.StatusOK,
 		Header:     http.Header{"Content-Type": []string{"application/json"}},
 	}
-	return response
+	return resp
 }
