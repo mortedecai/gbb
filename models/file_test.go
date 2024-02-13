@@ -53,5 +53,6 @@ var _ = Describe("File", func() {
 		Expect(fi.IsDir()).To(BeTrue())
 		fi, err = os.Stat(path.Join(dir + "/test/path/create/foo.txt"))
 		Expect(err).To(HaveOccurred())
+		Expect(fi.IsDir()).To(BeFalse())
 	})
 })

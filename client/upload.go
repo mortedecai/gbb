@@ -15,7 +15,6 @@ import (
 
 func HandleUpload(uo UploadOption) error {
 	var req *http.Request
-	//var resp *http.Response
 	var buff *bytes.Reader
 	var err error
 
