@@ -3,7 +3,7 @@ package client
 import (
 	"bytes"
 	"errors"
-	"github.com/mortedecai/gbb/response"
+	"github.com/mortedecai/gbb/models"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -73,20 +73,20 @@ var _ = Describe("Gbb", func() {
 		entries := []struct {
 			context         string
 			outcome         string
-			files           []response.GBBDownloadFile
+			files           []models.GBBFileData
 			errCheck        func(err error)
 			expFilesWritten []int
 		}{
 			{
 				context:  "empty file list",
 				outcome:  "no files written",
-				files:    []response.GBBDownloadFile{},
+				files:    []models.GBBFileData{},
 				errCheck: func(err error) { Expect(err).ToNot(HaveOccurred()) },
 			},
 			{
 				context: "single file list - zero entries",
 				outcome: "one files written",
-				files: []response.GBBDownloadFile{
+				files: []models.GBBFileData{
 					{
 						Filename: "",
 						Code:     "",
@@ -98,7 +98,7 @@ var _ = Describe("Gbb", func() {
 			{
 				context: "single file list - no directory",
 				outcome: "one files written",
-				files: []response.GBBDownloadFile{
+				files: []models.GBBFileData{
 					{
 						Filename: "testFile1.js",
 						Code:     "// Hi\n// This is a file.",
@@ -110,7 +110,7 @@ var _ = Describe("Gbb", func() {
 			{
 				context: "single file list - in directory",
 				outcome: "one files written",
-				files: []response.GBBDownloadFile{
+				files: []models.GBBFileData{
 					{
 						Filename: "foo/testFile1.js",
 						Code:     "// Hi\n// This is a file.",
@@ -129,7 +129,7 @@ var _ = Describe("Gbb", func() {
 					defer os.RemoveAll(outputDir)
 
 					for _, idx := range entry.expFilesWritten {
-						path := entry.files[idx].Filename.ToAbsolutePath(outputDir)
+						path := entry.files[idx].Filename.Path(outputDir)
 						fi, err := os.Stat(path)
 						Expect(err).ToNot(HaveOccurred())
 						Expect(fi.IsDir()).To(BeFalse())
@@ -173,7 +173,7 @@ var _ = Describe("Gbb", func() {
 				wg := new(sync.WaitGroup)
 				wg.Add(1)
 
-				files := []response.GBBDownloadFile{{Filename: "BadFile.js"}}
+				files := []models.GBBFileData{{Filename: "BadFile.js"}}
 
 				mfc.w = nil
 				mfc.err = errors.New("doh")
@@ -213,7 +213,7 @@ var _ = Describe("Gbb", func() {
 				wg := new(sync.WaitGroup)
 				wg.Add(1)
 
-				files := []response.GBBDownloadFile{
+				files := []models.GBBFileData{
 					{
 						Filename: "BadFile.js",
 						Code:     "1234.... Nicky Nicky Nine Door",

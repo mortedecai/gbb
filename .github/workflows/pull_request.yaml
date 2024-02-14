@@ -112,7 +112,7 @@ jobs:
             -Dsonar.projectVersion=${{ env.CUR_PROJECT_VERSION }}
             -Dsonar.sourceEncoding=UTF-8
             -Dsonar.sources=.
-            -Dsonar.exclusions=**/*_test.go,**/mocks/*.go,**/vendor/**,**/testing/integration/**/*.go,**/*.json
+            -Dsonar.exclusions=**/*_test.go,**/mocks/*.go,**/vendor/**,**/testing/integration/**/*.go,**/*.json,**/testdata/**/*.*
             -Dsonar.tests=.
             -Dsonar.test.exclusions=**/vendor/**
             -Dsonar.test.inclusions=**/*_test.go

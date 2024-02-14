@@ -64,6 +64,10 @@ var _ = Describe("Root Option", func() {
 		ro.port = 0
 		Expect(ro.Valid()).To(BeFalse())
 	})
+	It("should return the correct server address", func() {
+		ro := baseRo
+		Expect(ro.Server()).To(Equal("http://example.com:1234"))
+	})
 })
 var _ = Describe("handleCommonFlags", func() {
 	var (

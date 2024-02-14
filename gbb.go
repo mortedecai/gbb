@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	version string = "<unknown>"
+	version = "<unknown>"
 	logger  *zap.SugaredLogger
 )
 

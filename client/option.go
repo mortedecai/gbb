@@ -1,6 +1,9 @@
 package client
 
-import "net/http"
+import (
+	"github.com/mortedecai/gbb/models"
+	"net/http"
+)
 
 // CommandOption represents the available actions on a base CommandOption
 type CommandOption interface {
@@ -8,6 +11,7 @@ type CommandOption interface {
 	Host() string
 	Port() int
 	Valid() bool
+	Server() string
 	AddAuth(req *http.Request) *http.Request
 }
 
@@ -20,3 +24,10 @@ type DownloadOption interface {
 }
 
 //go:generate mockgen -destination=./mocks/mock_download_option.go -package=mocks github.com/mortedecai/gbb/client DownloadOption
+
+type UploadOption interface {
+	CommandOption
+	ToUpload() []models.GBBFileName
+}
+
+//go:generate mockgen -destination=./mocks/mock_upload_option.go -package=mocks github.com/mortedecai/gbb/client UploadOption
