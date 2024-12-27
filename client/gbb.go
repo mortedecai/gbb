@@ -3,12 +3,13 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mortedecai/gbb/gbberror"
-	"github.com/mortedecai/gbb/models"
 	"io"
 	"net/http"
 	"os"
 	"path"
+
+	"github.com/mortedecai/gbb/gbberror"
+	"github.com/mortedecai/gbb/models"
 )
 
 // GBBClient is an interface to the http.Client methods used for mocking purposes
@@ -39,7 +40,11 @@ func handleServerCall(req *http.Request, expStatus int, responseData any) error 
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != expStatus {
-		return fmt.Errorf("%w: expected %d, got %d", gbberror.ErrUnexpectedResponse, http.StatusOK, resp.StatusCode)
+		data, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("%w: expected %d, got %d", gbberror.ErrUnexpectedResponse, http.StatusOK, resp.StatusCode)
+		}
+		return fmt.Errorf("%w: expected %d, got %d; Message: %s", gbberror.ErrUnexpectedResponse, http.StatusOK, resp.StatusCode, string(data))
 	}
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {

@@ -40,5 +40,9 @@ func (a *App) SetupCommands(version string) {
 		a.logger.Debugw("SetupCommands", "Status", "Error", "Command", "upload", "Error", err)
 		panic(err)
 	}
+	if _, err = commands.Delete(a.cmd); err != nil {
+		a.logger.Debugw("SetupCommands", "Status", "Error", "Command", "delete", "Error", err)
+		panic(err)
+	}
 	a.logger.Debugw("SetupCommands", "Status", "Completed")
 }
