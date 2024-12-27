@@ -1,8 +1,9 @@
 package client
 
 import (
-	"github.com/mortedecai/gbb/models"
 	"net/http"
+
+	"github.com/mortedecai/gbb/models"
 )
 
 // CommandOption represents the available actions on a base CommandOption
@@ -31,3 +32,9 @@ type UploadOption interface {
 }
 
 //go:generate mockgen -destination=./mocks/mock_upload_option.go -package=mocks github.com/mortedecai/gbb/client UploadOption
+
+// DeleteOption represents the options available to the Delete command.
+type DeleteOption interface {
+	CommandOption
+	ToDelete() models.GBBFileName
+}
